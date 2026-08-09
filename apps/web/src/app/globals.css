@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Galaxie Copernicus";
+  src:
+    local("Galaxie Copernicus Book"),
+    local("GalaxieCopernicus-Book"),
+    url("/fonts/GalaxieCopernicus-Book.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.font-galaxie-copernicus {
+  font-family: "Galaxie Copernicus", Georgia, "Times New Roman", serif;
+}
