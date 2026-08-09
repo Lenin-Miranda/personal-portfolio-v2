@@ -4,8 +4,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Portfolio v2",
-  description: "Personal portfolio project setup.",
+  title: "Lenin Miranda | Software Engineer",
+  description:
+    "Portfolio of Lenin Miranda, a software engineer based in Las Vegas, Nevada.",
 };
 
 export default function RootLayout({

@@ -2,7 +2,7 @@
 
 import { type RefObject, useEffect, useRef } from "react";
 
-const LOGO_PATH = "/brand/lenin-miranda-icon.png";
+const LOGO_PATH = "/brand/lenin-miranda-mark.png";
 const SOURCE_SIZE = 512;
 const INTRO_DURATION = 4000;
 const SETTLED_FRAME_INTERVAL = 1000 / 30;
