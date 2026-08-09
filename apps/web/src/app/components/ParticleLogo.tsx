@@ -1,10 +1,11 @@
 "use client";
 
 import { type RefObject, useEffect, useRef } from "react";
-import { useReducedMotion } from "motion/react";
 
 const LOGO_PATH = "/brand/lenin-miranda-icon.png";
 const SOURCE_SIZE = 512;
+const INTRO_DURATION = 4000;
+const SETTLED_FRAME_INTERVAL = 1000 / 30;
 
 type LogoPoint = {
   x: number;
@@ -31,6 +32,13 @@ type Particle = {
 
 type ParticleLogoProps = {
   nameRef: RefObject<HTMLDivElement | null>;
+};
+
+type DrawArea = {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
 };
 
 function createRandom(seed: number) {
@@ -129,17 +137,42 @@ function buildParticles(
   const nameWidth = Math.min(width * 0.78, 920);
 
   return visiblePoints.map((point) => ({
-    delay: 1050 + random() * 800,
-    duration: 1600 + random() * 700,
+    delay: 750 + random() * 600,
+    duration: 1750 + random() * 650,
     endX: centerX + point.x * logoSize,
     endY: targetCenterY + point.y * logoSize,
-    opacity: 0.64 + random() * 0.3,
+    opacity: 0.72 + random() * 0.28,
     radius: (isCompact ? 0.95 : 1.1) + random() * 1.35,
     startX: centerX + (random() - 0.5) * nameWidth,
     startY: sourceCenterY + (random() - 0.5) * (isCompact ? 24 : 34),
     twinkleOffset: random() * Math.PI * 2,
-    twinkleSpeed: 0.0013 + random() * 0.0012,
+    twinkleSpeed: 0.0022 + random() * 0.0014,
   }));
+}
+
+function getDrawArea(particles: Particle[], width: number, height: number) {
+  const padding = 8;
+  let left = width;
+  let right = 0;
+  let top = height;
+  let bottom = 0;
+
+  for (const particle of particles) {
+    left = Math.min(left, particle.startX, particle.endX);
+    right = Math.max(right, particle.startX, particle.endX);
+    top = Math.min(top, particle.startY, particle.endY);
+    bottom = Math.max(bottom, particle.startY, particle.endY);
+  }
+
+  const x = Math.max(Math.floor(left - padding), 0);
+  const y = Math.max(Math.floor(top - padding), 0);
+
+  return {
+    height: Math.min(Math.ceil(bottom + padding), height) - y,
+    width: Math.min(Math.ceil(right + padding), width) - x,
+    x,
+    y,
+  } satisfies DrawArea;
 }
 
 function easeOutQuart(progress: number) {
@@ -148,7 +181,6 @@ function easeOutQuart(progress: number) {
 
 export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -157,7 +189,7 @@ export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
       return;
     }
 
-    const context = canvas.getContext("2d");
+    const context = canvas.getContext("2d", { desynchronized: true });
 
     if (!context) {
       return;
@@ -165,19 +197,28 @@ export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
 
     const logoImage = new Image();
     let animationFrame = 0;
-    let hasAnimated = false;
+    let drawArea: DrawArea = { height: 0, width: 0, x: 0, y: 0 };
     let isDisposed = false;
+    let lastDrawAt = 0;
     let logoPoints: LogoPoint[] = [];
+    let particles: Particle[] = [];
+    let startedAt = 0;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     const drawParticles = (
       particles: Particle[],
       elapsed: number,
       twinkle: boolean,
     ) => {
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-
-      context.clearRect(0, 0, width, height);
+      context.clearRect(
+        drawArea.x,
+        drawArea.y,
+        drawArea.width,
+        drawArea.height,
+      );
+      context.fillStyle = "#ffffff";
 
       for (const particle of particles) {
         const rawProgress = (elapsed - particle.delay) / particle.duration;
@@ -195,27 +236,36 @@ export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
         const reveal = Math.min(progress * 3, 1);
         const twinkleStrength =
           twinkle && progress === 1
-            ? 0.62 +
-              0.38 *
-                ((Math.sin(
-                  elapsed * particle.twinkleSpeed + particle.twinkleOffset,
-                ) +
-                  1) /
-                  2)
+            ? 0.28 +
+              0.72 *
+                Math.pow(
+                  (Math.sin(
+                    elapsed * particle.twinkleSpeed + particle.twinkleOffset,
+                  ) +
+                    1) /
+                    2,
+                  2,
+                )
             : 1;
 
+        context.globalAlpha = particle.opacity * reveal * twinkleStrength;
         context.beginPath();
-        context.fillStyle = `rgba(255, 255, 255, ${particle.opacity * reveal * twinkleStrength})`;
         context.arc(x, y, particle.radius, 0, Math.PI * 2);
         context.fill();
       }
+
+      context.globalAlpha = 1;
     };
 
-    const render = (animate: boolean) => {
+    const updateParticleLayout = () => {
+      if (logoPoints.length === 0) {
+        return;
+      }
+
       const bounds = canvas.getBoundingClientRect();
       const width = Math.max(Math.round(bounds.width), 1);
       const height = Math.max(Math.round(bounds.height), 1);
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
 
       canvas.width = Math.round(width * pixelRatio);
       canvas.height = Math.round(height * pixelRatio);
@@ -231,66 +281,79 @@ export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
             centerY: height * 0.62,
             top: height * 0.55,
           };
-      const particles = buildParticles(logoPoints, width, height, namePosition);
+      particles = buildParticles(logoPoints, width, height, namePosition);
+      drawArea = getDrawArea(particles, width, height);
 
       if (reduceMotion) {
         drawParticles(particles, Number.POSITIVE_INFINITY, false);
+      }
+    };
+
+    const drawFrame = (timestamp: number) => {
+      if (isDisposed) {
         return;
       }
 
-      const startedAt = animate ? performance.now() : performance.now() - 5000;
-      let lastDrawAt = 0;
+      const elapsed = timestamp - startedAt;
+      const isIntroPlaying = elapsed < INTRO_DURATION;
 
-      const drawFrame = (timestamp: number) => {
-        if (isDisposed) {
-          return;
-        }
-
-        if (timestamp - lastDrawAt >= 1000 / 30) {
-          drawParticles(particles, timestamp - startedAt, true);
-          lastDrawAt = timestamp;
-        }
-
-        animationFrame = window.requestAnimationFrame(drawFrame);
-      };
+      if (isIntroPlaying || timestamp - lastDrawAt >= SETTLED_FRAME_INTERVAL) {
+        drawParticles(particles, elapsed, true);
+        lastDrawAt = timestamp;
+      }
 
       animationFrame = window.requestAnimationFrame(drawFrame);
     };
 
-    const renderForCurrentSize = () => {
-      if (logoPoints.length === 0) {
-        return;
-      }
-
-      window.cancelAnimationFrame(animationFrame);
-      render(!hasAnimated);
-      hasAnimated = true;
+    const handleResize = () => {
+      updateParticleLayout();
     };
 
-    const resizeObserver = new ResizeObserver(renderForCurrentSize);
+    const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(canvas);
 
     if (nameRef.current) {
       resizeObserver.observe(nameRef.current);
     }
 
-    logoImage.onload = () => {
+    const prepareLogo = async () => {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          logoImage.onload = () => resolve();
+          logoImage.onerror = () => reject(new Error("Logo image failed"));
+          logoImage.src = LOGO_PATH;
+
+          if (logoImage.complete && logoImage.naturalWidth > 0) {
+            resolve();
+          }
+        });
+      } catch {
+        return;
+      }
+
       if (isDisposed) {
         return;
       }
 
       logoPoints = collectLogoPoints(logoImage);
-      renderForCurrentSize();
+      startedAt = performance.now();
+      updateParticleLayout();
+
+      if (!reduceMotion) {
+        animationFrame = window.requestAnimationFrame(drawFrame);
+      }
     };
-    logoImage.src = LOGO_PATH;
+
+    void prepareLogo();
 
     return () => {
       isDisposed = true;
       logoImage.onload = null;
+      logoImage.onerror = null;
       resizeObserver.disconnect();
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [nameRef, reduceMotion]);
+  }, [nameRef]);
 
   return (
     <canvas
