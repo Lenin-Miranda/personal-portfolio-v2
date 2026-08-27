@@ -3,6 +3,7 @@ import ContactSection from "./ContactSection";
 import ExperienceSection from "./ExperienceSection";
 import Hero from "./Hero";
 import ProjectsShowcase from "./ProjectsShowcase";
+import SectionContinuity from "./SectionContinuity";
 import SiteHeader from "./SiteHeader";
 
 export default function PortfolioScene() {
@@ -15,6 +16,7 @@ export default function PortfolioScene() {
         <ProjectsShowcase />
         <AboutSection />
         <ContactSection />
+        <SectionContinuity />
       </main>
     </div>
   );
