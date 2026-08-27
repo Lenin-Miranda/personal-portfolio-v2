@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const LOGO_PATH = "/brand/lenin-miranda-mark.png";
 const SOURCE_SIZE = 512;
-const INTRO_DURATION = 2400;
+const INTRO_DURATION = 620;
 const INTERACTION_RADIUS = 84;
 const MAX_REPULSION = 10;
 const POINTER_EASING = 0.16;
@@ -101,8 +101,8 @@ function buildParticles(points: LogoPoint[], width: number, height: number) {
   const centerY = height / 2;
 
   return visiblePoints.map((point) => ({
-    delay: 120 + random() * 520,
-    duration: 1200 + random() * 620,
+    delay: 20 + random() * 65,
+    duration: 300 + random() * 220,
     endX: centerX + point.x * logoSize,
     endY: centerY + point.y * logoSize,
     offsetX: 0,

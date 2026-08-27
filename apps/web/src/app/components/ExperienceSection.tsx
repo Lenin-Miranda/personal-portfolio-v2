@@ -1,5 +1,5 @@
 import { EXPERIENCE } from "../data/portfolio";
-import Reveal from "./Reveal";
+import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 
 export default function ExperienceSection() {
   return (
@@ -9,32 +9,42 @@ export default function ExperienceSection() {
       id="experience"
     >
       <div className="section-inner">
-        <Reveal className="section-heading section-heading-paper">
-          <p className="section-index">01 / Experience</p>
-          <h2 id="experience-title">Where reliability became the work.</h2>
-          <p className="section-deck">
-            Production experience across AI communication systems, high-volume
-            automation, backend lifecycle workflows, and full-stack commerce.
-          </p>
-        </Reveal>
+        <RevealGroup className="section-heading section-heading-paper">
+          <RevealItem className="section-index" level="meta">
+            <p>01 / Experience</p>
+          </RevealItem>
+          <MaskedReveal className="section-heading-title">
+            <h2 id="experience-title">Where reliability became the work.</h2>
+          </MaskedReveal>
+          <RevealItem className="section-deck">
+            <p>
+              Production experience across AI communication systems, high-volume
+              automation, backend lifecycle workflows, and full-stack commerce.
+            </p>
+          </RevealItem>
+        </RevealGroup>
 
         <ol className="experience-list">
-          {EXPERIENCE.map((experience, index) => (
+          {EXPERIENCE.map((experience) => (
             <li key={`${experience.company}-${experience.dates}`}>
-              <Reveal className="experience-entry" delay={index * 0.035}>
-                <div className="experience-meta">
+              <RevealGroup
+                amount={0.23}
+                className="experience-entry"
+                stagger={0.085}
+              >
+                <RevealItem className="experience-meta" level="meta">
                   <p>{experience.dates}</p>
                   <p>{experience.location}</p>
-                </div>
+                </RevealItem>
 
-                <div className="experience-position">
+                <RevealItem className="experience-position">
                   <p>{experience.company}</p>
                   <h3>{experience.role}</h3>
                   <p className="experience-summary">{experience.summary}</p>
                   <p className="experience-proof">{experience.proof}</p>
-                </div>
+                </RevealItem>
 
-                <div className="experience-detail">
+                <RevealItem className="experience-detail">
                   <ul>
                     {experience.highlights.map((highlight) => (
                       <li key={highlight}>{highlight}</li>
@@ -43,8 +53,8 @@ export default function ExperienceSection() {
                   <p className="technology-line">
                     {experience.technologies.join(" / ")}
                   </p>
-                </div>
-              </Reveal>
+                </RevealItem>
+              </RevealGroup>
             </li>
           ))}
         </ol>

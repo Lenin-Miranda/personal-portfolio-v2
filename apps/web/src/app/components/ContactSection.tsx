@@ -1,7 +1,7 @@
 import { SITE } from "../data/portfolio";
 import ContactForm from "./ContactForm";
 import { ArrowUpRight } from "./Icons";
-import Reveal from "./Reveal";
+import Reveal, { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 
 export default function ContactSection() {
   return (
@@ -12,22 +12,30 @@ export default function ContactSection() {
     >
       <div className="section-inner">
         <div className="contact-layout">
-          <Reveal className="contact-heading">
-            <p className="section-index">04 / Contact</p>
-            <h2 id="contact-title">
-              Let’s talk about the system behind the screen.
-            </h2>
-            <p className="contact-deck">
-              One detail at a time. Tell me who you are, what brought you here,
-              and where the work could go next.
-            </p>
-            <a className="contact-direct-email" href={`mailto:${SITE.email}`}>
-              {SITE.email}
-              <ArrowUpRight />
-            </a>
-          </Reveal>
+          <RevealGroup amount={0.22} className="contact-heading" stagger={0.08}>
+            <RevealItem className="section-index" level="meta">
+              <p>04 / Contact</p>
+            </RevealItem>
+            <MaskedReveal className="contact-title-mask">
+              <h2 id="contact-title">
+                Let’s talk about the system behind the screen.
+              </h2>
+            </MaskedReveal>
+            <RevealItem className="contact-deck">
+              <p>
+                One detail at a time. Tell me who you are, what brought you
+                here, and where the work could go next.
+              </p>
+            </RevealItem>
+            <RevealItem level="meta">
+              <a className="contact-direct-email" href={`mailto:${SITE.email}`}>
+                {SITE.email}
+                <ArrowUpRight />
+              </a>
+            </RevealItem>
+          </RevealGroup>
 
-          <Reveal className="contact-form-column" delay={0.08}>
+          <Reveal amount={0.18} className="contact-form-column" delay={0.12}>
             <ContactForm fallbackEmail={SITE.email} />
           </Reveal>
         </div>

@@ -1,7 +1,7 @@
 import { PROJECT_STATUS_LABELS, type FeaturedProject } from "../data/portfolio";
 import { ArrowUpRight } from "./Icons";
 import ProjectVisual from "./ProjectVisual";
-import Reveal from "./Reveal";
+import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 
 type ProjectCardProps = {
   project: FeaturedProject;
@@ -20,8 +20,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           />
         </div>
 
-        <Reveal className="project-copy">
-          <div className="project-meta">
+        <RevealGroup amount={0.2} className="project-copy" stagger={0.085}>
+          <RevealItem className="project-meta" level="meta">
             <span>{project.number} / Featured project</span>
             <div className="project-meta-detail">
               <span
@@ -32,44 +32,54 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               </span>
               <span className="project-role">{project.role}</span>
             </div>
-          </div>
+          </RevealItem>
 
-          <h3>{project.title}</h3>
-          <p className="project-positioning">{project.positioning}</p>
+          <MaskedReveal className="project-title-mask">
+            <h3>{project.title}</h3>
+          </MaskedReveal>
+          <RevealItem>
+            <p className="project-positioning">{project.positioning}</p>
+          </RevealItem>
 
-          <dl className="project-notes">
-            <div>
-              <dt>What I built</dt>
-              <dd>{project.build}</dd>
+          <RevealItem>
+            <dl className="project-notes">
+              <div>
+                <dt>What I built</dt>
+                <dd>{project.build}</dd>
+              </div>
+              <div>
+                <dt>Engineering challenge</dt>
+                <dd>{project.challenge}</dd>
+              </div>
+              <div>
+                <dt>Result</dt>
+                <dd>{project.result}</dd>
+              </div>
+            </dl>
+          </RevealItem>
+
+          <RevealItem level="meta">
+            <p className="project-stack">{project.stack.join(" / ")}</p>
+          </RevealItem>
+
+          <RevealItem level="meta">
+            <div className="project-links">
+              {project.links.map((link) => (
+                <a
+                  className="text-link text-link-light"
+                  href={link.href}
+                  key={link.href}
+                  rel="noreferrer noopener"
+                  target="_blank"
+                >
+                  {link.label}
+                  <span className="sr-only">, opens in a new tab</span>
+                  <ArrowUpRight />
+                </a>
+              ))}
             </div>
-            <div>
-              <dt>Engineering challenge</dt>
-              <dd>{project.challenge}</dd>
-            </div>
-            <div>
-              <dt>Result</dt>
-              <dd>{project.result}</dd>
-            </div>
-          </dl>
-
-          <p className="project-stack">{project.stack.join(" / ")}</p>
-
-          <div className="project-links">
-            {project.links.map((link) => (
-              <a
-                className="text-link text-link-light"
-                href={link.href}
-                key={link.href}
-                rel="noreferrer noopener"
-                target="_blank"
-              >
-                {link.label}
-                <span className="sr-only">, opens in a new tab</span>
-                <ArrowUpRight />
-              </a>
-            ))}
-          </div>
-        </Reveal>
+          </RevealItem>
+        </RevealGroup>
       </div>
     </article>
   );

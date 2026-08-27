@@ -5,7 +5,7 @@ import {
 } from "../data/portfolio";
 import { ArrowUpRight } from "./Icons";
 import ProjectCard from "./ProjectCard";
-import Reveal from "./Reveal";
+import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 
 export default function ProjectsShowcase() {
   return (
@@ -15,14 +15,20 @@ export default function ProjectsShowcase() {
       id="work"
     >
       <div className="section-inner project-section-inner">
-        <Reveal className="section-heading">
-          <p className="section-index">02 / Selected work</p>
-          <h2 id="work-title">Systems are the product.</h2>
-          <p className="section-deck">
-            Selected builds that connect interface decisions to state, data,
-            validation, and the behavior users depend on.
-          </p>
-        </Reveal>
+        <RevealGroup className="section-heading">
+          <RevealItem className="section-index" level="meta">
+            <p>02 / Selected work</p>
+          </RevealItem>
+          <MaskedReveal className="section-heading-title">
+            <h2 id="work-title">Systems are the product.</h2>
+          </MaskedReveal>
+          <RevealItem className="section-deck">
+            <p>
+              Selected builds that connect interface decisions to state, data,
+              validation, and the behavior users depend on.
+            </p>
+          </RevealItem>
+        </RevealGroup>
 
         <div className="featured-projects">
           {FEATURED_PROJECTS.map((project) => (
@@ -31,22 +37,27 @@ export default function ProjectsShowcase() {
         </div>
 
         <div className="additional-work">
-          <Reveal className="additional-work-heading">
-            <p className="eyebrow">Additional build notes</p>
-            <h3>More of the system, less of the thumbnail.</h3>
-          </Reveal>
+          <RevealGroup className="additional-work-heading">
+            <RevealItem className="eyebrow" level="meta">
+              <p>Additional build notes</p>
+            </RevealItem>
+            <MaskedReveal className="additional-work-title">
+              <h3>More of the system, less of the thumbnail.</h3>
+            </MaskedReveal>
+          </RevealGroup>
 
           <div className="additional-project-list">
-            {ADDITIONAL_PROJECTS.map((project, index) => (
-              <Reveal
+            {ADDITIONAL_PROJECTS.map((project) => (
+              <RevealGroup
+                amount={0.28}
                 className="additional-project"
-                delay={index * 0.04}
                 key={project.title}
+                stagger={0.08}
               >
-                <span className="additional-project-number">
-                  {project.number}
-                </span>
-                <div className="additional-project-copy">
+                <RevealItem className="additional-project-number" level="meta">
+                  <span>{project.number}</span>
+                </RevealItem>
+                <RevealItem className="additional-project-copy">
                   <div className="additional-project-titleline">
                     <h4>{project.title}</h4>
                     <span
@@ -57,8 +68,8 @@ export default function ProjectsShowcase() {
                     </span>
                   </div>
                   <p>{project.description}</p>
-                </div>
-                <div className="additional-project-meta">
+                </RevealItem>
+                <RevealItem className="additional-project-meta" level="meta">
                   <p>{project.stack.join(" / ")}</p>
                   {project.links.length > 0 ? (
                     <div>
@@ -76,8 +87,8 @@ export default function ProjectsShowcase() {
                       ))}
                     </div>
                   ) : null}
-                </div>
-              </Reveal>
+                </RevealItem>
+              </RevealGroup>
             ))}
           </div>
         </div>
