@@ -214,6 +214,26 @@ export const FEATURED_PROJECTS: readonly FeaturedProject[] = [
   },
 ] as const;
 
+export function getFeaturedProjectBySlug(slug: string) {
+  return FEATURED_PROJECTS.find((project) => project.id === slug);
+}
+
+export function getFeaturedProjectSlugs() {
+  return FEATURED_PROJECTS.map((project) => project.id);
+}
+
+export function getNextFeaturedProject(slug: string) {
+  const currentIndex = FEATURED_PROJECTS.findIndex(
+    (project) => project.id === slug,
+  );
+
+  if (currentIndex < 0) {
+    return undefined;
+  }
+
+  return FEATURED_PROJECTS[(currentIndex + 1) % FEATURED_PROJECTS.length];
+}
+
 export type AdditionalProject = {
   description: string;
   links: readonly { href: string; label: string }[];

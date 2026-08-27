@@ -16,6 +16,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             alt={project.alt}
             image={project.image}
             number={project.number}
+            projectId={project.id}
             tone={project.tone}
           />
         </div>

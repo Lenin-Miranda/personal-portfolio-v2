@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { NAV_ITEMS, SITE } from "../data/portfolio";
@@ -11,10 +13,13 @@ const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export default function SiteHeader() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const reduceMotion = useReducedMotion();
+  const isHome = pathname === "/";
+  const sectionHref = (href: string) => (isHome ? href : `/${href}`);
 
   useEffect(() => {
     if (!isOpen) {
@@ -84,7 +89,11 @@ export default function SiteHeader() {
       </a>
 
       <header className="site-header">
-        <a className="brand-link" href="#top" aria-label="Lenin Miranda, home">
+        <Link
+          aria-label="Lenin Miranda, home"
+          className="brand-link"
+          href={isHome ? "#top" : "/#top"}
+        >
           <Image
             alt=""
             className="brand-mark"
@@ -94,13 +103,13 @@ export default function SiteHeader() {
             width={42}
           />
           <span>{SITE.name}</span>
-        </a>
+        </Link>
 
         <nav aria-label="Primary navigation" className="desktop-nav">
           <ul>
             {NAV_ITEMS.map((item) => (
               <li key={item.href}>
-                <a href={item.href}>{item.label}</a>
+                <Link href={sectionHref(item.href)}>{item.label}</Link>
               </li>
             ))}
           </ul>
@@ -171,9 +180,12 @@ export default function SiteHeader() {
                     }}
                   >
                     <span aria-hidden="true">0{index + 1}</span>
-                    <a href={item.href} onClick={() => setIsOpen(false)}>
+                    <Link
+                      href={sectionHref(item.href)}
+                      onClick={() => setIsOpen(false)}
+                    >
                       {item.label}
-                    </a>
+                    </Link>
                   </motion.li>
                 ))}
               </ol>
