@@ -1,5 +1,6 @@
 import { PROJECT_STATUS_LABELS, type FeaturedProject } from "../data/portfolio";
-import { ArrowUpRight } from "./Icons";
+import { ArrowRight, ArrowUpRight } from "./Icons";
+import ProjectTransitionLink from "./ProjectTransitionLink";
 import ProjectVisual from "./ProjectVisual";
 import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 
@@ -61,6 +62,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
           <RevealItem level="meta">
             <p className="project-stack">{project.stack.join(" / ")}</p>
+          </RevealItem>
+
+          <RevealItem>
+            <ProjectTransitionLink
+              ariaLabel={`View ${project.title} case study`}
+              className="project-case-study-link"
+              slug={project.id}
+            >
+              <span>View case study</span>
+              <ArrowRight />
+            </ProjectTransitionLink>
           </RevealItem>
 
           <RevealItem level="meta">
