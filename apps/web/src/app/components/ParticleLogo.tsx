@@ -1,20 +1,17 @@
 "use client";
 
-import { type RefObject, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 const LOGO_PATH = "/brand/lenin-miranda-mark.png";
 const SOURCE_SIZE = 512;
-const INTRO_DURATION = 4000;
-const SETTLED_FRAME_INTERVAL = 1000 / 30;
+const INTRO_DURATION = 2400;
+const INTERACTION_RADIUS = 84;
+const MAX_REPULSION = 10;
+const POINTER_EASING = 0.16;
 
 type LogoPoint = {
   x: number;
   y: number;
-};
-
-type NamePosition = {
-  centerY: number;
-  top: number;
 };
 
 type Particle = {
@@ -22,23 +19,12 @@ type Particle = {
   duration: number;
   endX: number;
   endY: number;
+  offsetX: number;
+  offsetY: number;
   opacity: number;
   radius: number;
   startX: number;
   startY: number;
-  twinkleOffset: number;
-  twinkleSpeed: number;
-};
-
-type ParticleLogoProps = {
-  nameRef: RefObject<HTMLDivElement | null>;
-};
-
-type DrawArea = {
-  height: number;
-  width: number;
-  x: number;
-  y: number;
 };
 
 function createRandom(seed: number) {
@@ -83,13 +69,9 @@ function collectLogoPoints(image: HTMLImageElement) {
       const green = pixels[pixelIndex + 1] ?? 0;
       const blue = pixels[pixelIndex + 2] ?? 0;
       const alpha = pixels[pixelIndex + 3] ?? 0;
-      const brightness = (red + green + blue) / 3;
 
-      if (alpha > 160 && brightness > 68) {
-        points.push({
-          x: x / SOURCE_SIZE - 0.5,
-          y: y / SOURCE_SIZE - 0.5,
-        });
+      if (alpha > 160 && (red + green + blue) / 3 > 68) {
+        points.push({ x: x / SOURCE_SIZE - 0.5, y: y / SOURCE_SIZE - 0.5 });
       }
     }
   }
@@ -97,89 +79,46 @@ function collectLogoPoints(image: HTMLImageElement) {
   return points;
 }
 
-function buildParticles(
-  points: LogoPoint[],
-  width: number,
-  height: number,
-  namePosition: NamePosition,
-) {
+function buildParticles(points: LogoPoint[], width: number, height: number) {
   const random = createRandom(2026);
   const shuffledPoints = [...points];
 
   for (let index = shuffledPoints.length - 1; index > 0; index -= 1) {
     const swapIndex = Math.floor(random() * (index + 1));
-    const currentPoint = shuffledPoints[index];
-    const swapPoint = shuffledPoints[swapIndex];
+    const current = shuffledPoints[index];
+    const replacement = shuffledPoints[swapIndex];
 
-    if (!currentPoint || !swapPoint) {
-      continue;
+    if (current && replacement) {
+      shuffledPoints[index] = replacement;
+      shuffledPoints[swapIndex] = current;
     }
-
-    shuffledPoints[index] = swapPoint;
-    shuffledPoints[swapIndex] = currentPoint;
   }
 
-  const isCompact = width < 640;
-  const particleLimit = isCompact ? 190 : 340;
-  const logoSize = Math.min(
-    width * (isCompact ? 0.82 : 0.68),
-    height * (isCompact ? 0.9 : 0.92),
-    760,
-  );
-  const visiblePoints = shuffledPoints.slice(0, particleLimit);
-  const logoBottom = visiblePoints.reduce(
-    (lowestPoint, point) => Math.max(lowestPoint, point.y),
-    0,
-  );
+  const isCompact = width < 460;
+  const visiblePoints = shuffledPoints.slice(0, isCompact ? 180 : 300);
+  const logoSize = Math.min(width * 0.86, height * 0.9, 470);
   const centerX = width / 2;
-  const targetCenterY = namePosition.top - 20 - logoBottom * logoSize;
-  const sourceCenterY = namePosition.centerY;
-  const nameWidth = Math.min(width * 0.78, 920);
+  const centerY = height / 2;
 
   return visiblePoints.map((point) => ({
-    delay: 750 + random() * 600,
-    duration: 1750 + random() * 650,
+    delay: 120 + random() * 520,
+    duration: 1200 + random() * 620,
     endX: centerX + point.x * logoSize,
-    endY: targetCenterY + point.y * logoSize,
-    opacity: 0.72 + random() * 0.28,
-    radius: (isCompact ? 0.95 : 1.1) + random() * 1.35,
-    startX: centerX + (random() - 0.5) * nameWidth,
-    startY: sourceCenterY + (random() - 0.5) * (isCompact ? 24 : 34),
-    twinkleOffset: random() * Math.PI * 2,
-    twinkleSpeed: 0.0022 + random() * 0.0014,
+    endY: centerY + point.y * logoSize,
+    offsetX: 0,
+    offsetY: 0,
+    opacity: 0.66 + random() * 0.34,
+    radius: (isCompact ? 0.85 : 1) + random() * 1.2,
+    startX: centerX + (random() - 0.5) * width * 0.9,
+    startY: height * (0.74 + random() * 0.18),
   }));
-}
-
-function getDrawArea(particles: Particle[], width: number, height: number) {
-  const padding = 8;
-  let left = width;
-  let right = 0;
-  let top = height;
-  let bottom = 0;
-
-  for (const particle of particles) {
-    left = Math.min(left, particle.startX, particle.endX);
-    right = Math.max(right, particle.startX, particle.endX);
-    top = Math.min(top, particle.startY, particle.endY);
-    bottom = Math.max(bottom, particle.startY, particle.endY);
-  }
-
-  const x = Math.max(Math.floor(left - padding), 0);
-  const y = Math.max(Math.floor(top - padding), 0);
-
-  return {
-    height: Math.min(Math.ceil(bottom + padding), height) - y,
-    width: Math.min(Math.ceil(right + padding), width) - x,
-    x,
-    y,
-  } satisfies DrawArea;
 }
 
 function easeOutQuart(progress: number) {
   return 1 - Math.pow(1 - progress, 4);
 }
 
-export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
+export default function ParticleLogo() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -195,33 +134,32 @@ export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
       return;
     }
 
-    const logoImage = new Image();
-    let animationFrame = 0;
-    let drawArea: DrawArea = { height: 0, width: 0, x: 0, y: 0 };
-    let isDisposed = false;
-    let lastDrawAt = 0;
-    let logoPoints: LogoPoint[] = [];
-    let particles: Particle[] = [];
-    let startedAt = 0;
-    const reduceMotion = window.matchMedia(
+    const image = new Image();
+    const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    const canInteract =
+      !reducedMotion &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const pointer = { active: false, x: 0, y: 0 };
+    let animationFrame = 0;
+    let disposed = false;
+    let introStartedAt = 0;
+    let isAnimating = false;
+    let points: LogoPoint[] = [];
+    let particles: Particle[] = [];
 
-    const drawParticles = (
-      particles: Particle[],
-      elapsed: number,
-      twinkle: boolean,
-    ) => {
-      context.clearRect(
-        drawArea.x,
-        drawArea.y,
-        drawArea.width,
-        drawArea.height,
-      );
-      context.fillStyle = "#ffffff";
+    const draw = (elapsed: number, interactive: boolean) => {
+      const bounds = canvas.getBoundingClientRect();
+      let needsAnotherFrame = elapsed < INTRO_DURATION;
+
+      context.clearRect(0, 0, bounds.width, bounds.height);
+      context.fillStyle = "#f5f2ea";
 
       for (const particle of particles) {
-        const rawProgress = (elapsed - particle.delay) / particle.duration;
+        const rawProgress = reducedMotion
+          ? 1
+          : (elapsed - particle.delay) / particle.duration;
         const progress = Math.min(Math.max(rawProgress, 0), 1);
 
         if (progress <= 0) {
@@ -229,137 +167,152 @@ export default function ParticleLogo({ nameRef }: ParticleLogoProps) {
         }
 
         const easedProgress = easeOutQuart(progress);
-        const x =
+        const baseX =
           particle.startX + (particle.endX - particle.startX) * easedProgress;
-        const y =
+        const baseY =
           particle.startY + (particle.endY - particle.startY) * easedProgress;
-        const reveal = Math.min(progress * 3, 1);
-        const twinkleStrength =
-          twinkle && progress === 1
-            ? 0.28 +
-              0.72 *
-                Math.pow(
-                  (Math.sin(
-                    elapsed * particle.twinkleSpeed + particle.twinkleOffset,
-                  ) +
-                    1) /
-                    2,
-                  2,
-                )
-            : 1;
+        let targetX = 0;
+        let targetY = 0;
 
-        context.globalAlpha = particle.opacity * reveal * twinkleStrength;
+        if (interactive && progress === 1 && pointer.active) {
+          const deltaX = particle.endX - pointer.x;
+          const deltaY = particle.endY - pointer.y;
+          const distance = Math.hypot(deltaX, deltaY);
+
+          if (distance > 0.001 && distance < INTERACTION_RADIUS) {
+            const force =
+              Math.pow(1 - distance / INTERACTION_RADIUS, 2) * MAX_REPULSION;
+            targetX = (deltaX / distance) * force;
+            targetY = (deltaY / distance) * force;
+          }
+        }
+
+        const offsetDeltaX = targetX - particle.offsetX;
+        const offsetDeltaY = targetY - particle.offsetY;
+        particle.offsetX += offsetDeltaX * POINTER_EASING;
+        particle.offsetY += offsetDeltaY * POINTER_EASING;
+
+        if (Math.abs(offsetDeltaX) > 0.04 || Math.abs(offsetDeltaY) > 0.04) {
+          needsAnotherFrame = true;
+        }
+
+        context.globalAlpha = particle.opacity * Math.min(progress * 3, 1);
         context.beginPath();
-        context.arc(x, y, particle.radius, 0, Math.PI * 2);
+        context.arc(
+          baseX + particle.offsetX,
+          baseY + particle.offsetY,
+          particle.radius,
+          0,
+          Math.PI * 2,
+        );
         context.fill();
       }
 
       context.globalAlpha = 1;
+      return needsAnotherFrame;
     };
 
-    const updateParticleLayout = () => {
-      if (logoPoints.length === 0) {
+    const tick = (timestamp: number) => {
+      if (disposed) {
+        return;
+      }
+
+      const keepAnimating = draw(timestamp - introStartedAt, canInteract);
+
+      if (keepAnimating) {
+        animationFrame = window.requestAnimationFrame(tick);
+      } else {
+        isAnimating = false;
+      }
+    };
+
+    const requestDraw = () => {
+      if (isAnimating || reducedMotion) {
+        return;
+      }
+
+      isAnimating = true;
+      animationFrame = window.requestAnimationFrame(tick);
+    };
+
+    const updateLayout = () => {
+      if (points.length === 0) {
         return;
       }
 
       const bounds = canvas.getBoundingClientRect();
       const width = Math.max(Math.round(bounds.width), 1);
       const height = Math.max(Math.round(bounds.height), 1);
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.25);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
 
       canvas.width = Math.round(width * pixelRatio);
       canvas.height = Math.round(height * pixelRatio);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      particles = buildParticles(points, width, height);
 
-      const nameBounds = nameRef.current?.getBoundingClientRect();
-      const namePosition = nameBounds
-        ? {
-            centerY: nameBounds.top - bounds.top + nameBounds.height / 2,
-            top: nameBounds.top - bounds.top,
-          }
-        : {
-            centerY: height * 0.62,
-            top: height * 0.55,
-          };
-      particles = buildParticles(logoPoints, width, height, namePosition);
-      drawArea = getDrawArea(particles, width, height);
-
-      if (reduceMotion) {
-        drawParticles(particles, Number.POSITIVE_INFINITY, false);
+      if (reducedMotion) {
+        draw(Number.POSITIVE_INFINITY, false);
+      } else {
+        introStartedAt = performance.now();
+        requestDraw();
       }
     };
 
-    const drawFrame = (timestamp: number) => {
-      if (isDisposed) {
-        return;
+    const handlePointerMove = (event: PointerEvent) => {
+      const bounds = canvas.getBoundingClientRect();
+      const wasActive = pointer.active;
+      pointer.x = event.clientX - bounds.left;
+      pointer.y = event.clientY - bounds.top;
+      pointer.active =
+        pointer.x >= 0 &&
+        pointer.x <= bounds.width &&
+        pointer.y >= 0 &&
+        pointer.y <= bounds.height;
+
+      if (pointer.active || wasActive) {
+        requestDraw();
       }
-
-      const elapsed = timestamp - startedAt;
-      const isIntroPlaying = elapsed < INTRO_DURATION;
-
-      if (isIntroPlaying || timestamp - lastDrawAt >= SETTLED_FRAME_INTERVAL) {
-        drawParticles(particles, elapsed, true);
-        lastDrawAt = timestamp;
-      }
-
-      animationFrame = window.requestAnimationFrame(drawFrame);
     };
 
-    const handleResize = () => {
-      updateParticleLayout();
+    const handlePointerLeave = () => {
+      pointer.active = false;
+      requestDraw();
     };
 
-    const resizeObserver = new ResizeObserver(handleResize);
+    const parent = canvas.parentElement;
+    const resizeObserver = new ResizeObserver(updateLayout);
     resizeObserver.observe(canvas);
 
-    if (nameRef.current) {
-      resizeObserver.observe(nameRef.current);
+    if (canInteract && parent) {
+      parent.addEventListener("pointermove", handlePointerMove);
+      parent.addEventListener("pointerleave", handlePointerLeave);
     }
 
-    const prepareLogo = async () => {
-      try {
-        await new Promise<void>((resolve, reject) => {
-          logoImage.onload = () => resolve();
-          logoImage.onerror = () => reject(new Error("Logo image failed"));
-          logoImage.src = LOGO_PATH;
-
-          if (logoImage.complete && logoImage.naturalWidth > 0) {
-            resolve();
-          }
-        });
-      } catch {
+    image.onload = () => {
+      if (disposed) {
         return;
       }
 
-      if (isDisposed) {
-        return;
-      }
-
-      logoPoints = collectLogoPoints(logoImage);
-      startedAt = performance.now();
-      updateParticleLayout();
-
-      if (!reduceMotion) {
-        animationFrame = window.requestAnimationFrame(drawFrame);
-      }
+      points = collectLogoPoints(image);
+      updateLayout();
     };
+    image.src = LOGO_PATH;
 
-    void prepareLogo();
+    if (image.complete && image.naturalWidth > 0) {
+      image.onload(new Event("load"));
+    }
 
     return () => {
-      isDisposed = true;
-      logoImage.onload = null;
-      logoImage.onerror = null;
+      disposed = true;
+      image.onload = null;
       resizeObserver.disconnect();
+      parent?.removeEventListener("pointermove", handlePointerMove);
+      parent?.removeEventListener("pointerleave", handlePointerLeave);
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [nameRef]);
+  }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-0 h-full w-full"
-    />
+    <canvas aria-hidden="true" className="particle-canvas" ref={canvasRef} />
   );
 }

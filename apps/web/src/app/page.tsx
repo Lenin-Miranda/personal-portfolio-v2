@@ -1,9 +1,5 @@
-import Hero from "./components/Hero";
+import PortfolioScene from "./components/PortfolioScene";
 
 export default function HomePage() {
-  return (
-    <main className="min-h-dvh overflow-hidden bg-stone-700">
-      <Hero />
-    </main>
-  );
+  return <PortfolioScene />;
 }
