@@ -20,9 +20,14 @@ pnpm install
 pnpm dev
 pnpm check
 pnpm build
+pnpm test:e2e
 ```
 
 La aplicación local se ejecuta en `http://localhost:3000`.
+
+Las pruebas de navegación usan Playwright sobre un build de producción local.
+Instala el navegador una vez con `pnpm --filter @portfolio/web exec playwright install chromium`.
+La arquitectura visual y de movimiento está documentada en [docs/motion-system.md](docs/motion-system.md).
 
 ## Formulario de contacto
 

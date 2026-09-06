@@ -1,233 +1,143 @@
-/* The entrance is one short sequence: paths → mark → identity → supporting UI.
-   Backwards fill releases animation properties to the scroll-depth styles. */
+/* A single finite system sequence. The unanimated/default state is complete,
+   including when scripting or motion is unavailable. Nothing follows a cursor. */
 .hero {
-  --hero-phase-step: var(--stagger-tight);
-  --hero-reveal-time: var(--motion-reveal);
-  --hero-reveal-distance: 105%;
+  --hero-sequence-scale: 1;
+  --hero-name-distance: 108%;
+  --hero-statement-distance: 75%;
 }
 
-.hero .hero-scene {
-  opacity: calc(0.5 + var(--hero-active) * 0.08 - var(--hero-scroll) * 0.22);
-  transform: translate3d(
-    calc(var(--hero-x) * -4px),
-    calc(var(--hero-y) * -3px + var(--hero-scroll) * 22px),
-    0
-  );
-}
-
-.hero .hero-schematic-depth {
-  transform: translate3d(
-    calc(var(--hero-x) * -5px),
-    calc(var(--hero-y) * -3px),
-    0
-  );
-}
-
-.hero .hero-schematic path {
-  stroke-dashoffset: 0;
-  animation: hero-path-resolve var(--hero-reveal-time) var(--ease-out) backwards;
-  animation-delay: calc(var(--hero-phase-step) * var(--path-step, 0));
-}
-
-.hero-schematic-paths path:nth-child(2) {
-  --path-step: 1;
-}
-.hero-schematic-paths path:nth-child(3) {
-  --path-step: 5;
-}
-.hero-schematic-paths path:nth-child(4) {
-  --path-step: 2;
-}
-.hero-schematic-paths path:nth-child(5) {
-  --path-step: 7;
-}
-
-.hero .hero-schematic circle {
-  opacity: 1;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: hero-node-resolve var(--motion-standard) var(--ease-out) backwards;
-  animation-delay: calc(var(--hero-phase-step) * var(--node-step, 4));
-}
-
-.hero-schematic-nodes circle:nth-child(2) {
-  --node-step: 9;
-}
-.hero-schematic-nodes circle:nth-child(3) {
-  --node-step: 5;
-}
-.hero-schematic-nodes circle:nth-child(4) {
-  --node-step: 11;
-}
-.hero-schematic-nodes circle:nth-child(5) {
-  --node-step: 6;
-}
-.hero-schematic-nodes circle:nth-child(6) {
-  --node-step: 9;
-}
-.hero-schematic-nodes circle:nth-child(7) {
-  --node-step: 13;
-}
-
-.hero .hero-grid-lines {
-  opacity: calc(0.9 - var(--hero-scroll) * 0.25);
-  transform: translate3d(calc(var(--hero-x) * 2px), 0, 0);
-  animation: hero-grid-resolve var(--motion-cinematic) var(--ease-out) backwards;
-}
-
-.hero .hero-scene-axis-horizontal {
-  transform: translate3d(
-    calc(var(--hero-x) * 5px),
-    calc(var(--hero-y) * 3px),
-    0
-  );
-}
-
-.hero .hero-scene-axis-vertical {
-  transform: translate3d(
-    calc(var(--hero-x) * 3px),
-    calc(var(--hero-y) * 5px),
-    0
-  );
-}
-
-.hero .hero-scene-readout {
-  top: 34%;
-  transform: translate3d(
-    calc(var(--hero-x) * 3px),
-    calc(var(--hero-y) * 2px),
-    0
-  );
-  animation: hero-content-resolve var(--motion-standard) var(--ease-out)
-    calc(var(--hero-phase-step) * 8) backwards;
-}
-
-.hero .hero-kicker {
-  transform: translate3d(
-    calc(var(--hero-x) * 2px),
-    calc(var(--hero-y) * 1px - var(--hero-scroll) * 8px),
-    0
-  );
-}
-
-.hero .hero-mark {
-  opacity: calc(1 - var(--hero-scroll) * 0.25);
-  transform: translate3d(
-      calc(var(--hero-x) * -8px),
-      calc(var(--hero-y) * -5px - var(--hero-scroll) * 24px),
-      0
-    )
-    scale(calc(1 - var(--hero-scroll) * 0.025));
-}
-
-.hero .hero-title {
-  opacity: calc(1 - var(--hero-scroll) * 0.22);
-  transform: translate3d(
-      calc(var(--hero-x) * 3px),
-      calc(var(--hero-y) * 2px - var(--hero-scroll) * 28px),
-      0
-    )
-    scale(calc(1 - var(--hero-scroll) * 0.012));
-  transform-origin: left center;
-}
-
-.hero .hero-title-mask,
-.hero .hero-statement-mask {
-  display: block;
-  overflow: clip;
-  padding-block: 0.08em;
-  margin-block: -0.08em;
-}
-
-.hero .hero-title-statement-mask,
-.hero .hero-statement-line {
-  display: block;
-}
-
-.hero .hero-keyword-interface {
-  color: var(--text);
-}
-
-.hero .hero-keyword-infrastructure {
-  color: var(--text);
-  text-decoration: underline;
-  text-decoration-color: rgb(215 255 100 / 38%);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.13em;
-}
-
-.hero .hero-title-keyword {
-  transition: color var(--motion-standard) var(--ease-out);
-}
-
-.hero .hero-intro {
-  opacity: calc(1 - var(--hero-scroll) * 0.16);
-  transform: translate3d(
-    calc(var(--hero-x) * -2px),
-    calc(var(--hero-y) * -1px - var(--hero-scroll) * 14px),
-    0
-  );
-}
-
-.hero .hero-foot {
-  opacity: calc(1 - var(--hero-scroll) * 0.1);
-  transform: translate3d(
-    calc(var(--hero-x) * 1px),
-    calc(var(--hero-scroll) * -5px),
-    0
-  );
-}
-
-.hero .hero-load-meta,
-.hero .hero-load-mark,
-.hero .hero-load-support,
-.hero .hero-load-actions,
-.hero .hero-load-secondary {
-  animation: hero-content-resolve var(--motion-standard) var(--ease-out)
-    backwards;
-}
-
-.hero .hero-load-meta {
-  animation-delay: var(--hero-phase-step);
-}
-.hero .hero-load-mark {
-  animation-delay: calc(var(--hero-phase-step) * 2);
-}
-.hero .hero-load-support {
-  animation-delay: calc(var(--hero-phase-step) * 8);
-}
-.hero .hero-load-actions {
-  animation-delay: calc(var(--hero-phase-step) * 9);
-}
-.hero .hero-load-secondary {
-  animation-delay: calc(var(--hero-phase-step) * 11);
-}
-
-.hero .hero-load-title,
-.hero .hero-load-statement {
-  animation: hero-type-resolve var(--hero-reveal-time) var(--ease-out)
-    calc(var(--hero-phase-step) * 3) backwards;
-}
-
-.hero .hero-load-statement {
-  animation-delay: calc(var(--hero-phase-step) * 5);
-}
-.hero .hero-load-infrastructure {
-  animation-delay: calc(var(--hero-phase-step) * 6);
-}
-
-.hero .hero-actions:focus-within {
+.hero [class*="hero-load"] {
   animation: none;
 }
 
+.hero .hero-grid-lines {
+  opacity: calc(0.72 - var(--hero-scroll, 0) * 0.2);
+  transform: none;
+}
+
+.hero-system {
+  position: relative;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: start;
+  min-width: 0;
+}
+
+.hero .hero-kicker {
+  position: relative;
+  z-index: 1;
+  align-items: flex-start;
+  align-self: start;
+  transform: none;
+}
+
+.hero-path-plane {
+  position: absolute;
+  inset: 0 33.333% 0 0;
+  pointer-events: none;
+  opacity: calc(1 - var(--hero-scroll, 0) * 0.35);
+}
+
+.hero-architecture,
+.hero-mark-architecture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hero-architecture path,
+.hero-mark-architecture path {
+  fill: none;
+  stroke-width: 1;
+  stroke: rgb(243 240 232 / 25%);
+  /* Normalized dash lengths must share the path's coordinate space. */
+  vector-effect: none;
+}
+
+.hero-architecture .hero-path-branch {
+  stroke: rgb(243 240 232 / 14%);
+}
+
+.hero-path-foundation,
+.hero-path-branch,
+.hero-data-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.hero-architecture .hero-signal,
+.hero-mark-architecture .hero-signal {
+  opacity: 0;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.042 1;
+  stroke-dashoffset: 0.042;
+}
+
+.hero .hero-node {
+  fill: var(--background);
+  stroke: rgb(215 255 100 / 58%);
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  vector-effect: non-scaling-stroke;
+}
+
+.hero-system-labels {
+  position: absolute;
+  inset: auto 0 9%;
+  color: var(--text-subtle);
+  font-size: 0.56rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-label-interface,
+.hero-label-services {
+  position: absolute;
+}
+.hero-label-interface {
+  left: 3%;
+}
+.hero-label-services {
+  left: 65%;
+}
+
+.hero .hero-mark {
+  grid-column: 9 / -1;
+  opacity: 1;
+  transform: translateY(calc(var(--hero-scroll, 0) * -12px))
+    scale(calc(1 - var(--hero-scroll, 0) * 0.02));
+  transform-origin: left center;
+}
+
 .hero .hero-mark-index {
-  animation: hero-content-resolve var(--motion-standard) var(--ease-out)
-    calc(var(--hero-phase-step) * 8) backwards;
+  top: var(--space-3);
+  bottom: auto;
+  font-size: 0.57rem;
+}
+
+.hero-label-data {
+  position: absolute;
+  right: 0;
+  bottom: -1.35rem;
+  color: var(--text-subtle);
+  font-size: 0.56rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .hero .particle-logo {
   position: absolute;
   inset: 0;
+  pointer-events: none;
 }
 
 .hero .particle-logo-fallback {
@@ -246,7 +156,193 @@
   visibility: hidden;
 }
 
-@keyframes hero-path-resolve {
+.hero .hero-title {
+  opacity: 1;
+  transform: translateY(calc(var(--hero-scroll, 0) * -12px));
+}
+
+.hero .hero-title-mask,
+.hero .hero-statement-mask {
+  display: block;
+  overflow: clip;
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+}
+
+.hero .hero-title-statement-mask,
+.hero .hero-statement-line {
+  display: block;
+}
+
+.hero .hero-keyword-interface,
+.hero .hero-keyword-infrastructure {
+  color: var(--text);
+}
+
+.hero .hero-keyword-infrastructure {
+  text-decoration: underline;
+  text-decoration-color: rgb(215 255 100 / 38%);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.13em;
+}
+
+.hero .hero-title-keyword {
+  translate: none;
+}
+.hero .hero-intro,
+.hero .hero-foot {
+  opacity: 1;
+  transform: none;
+}
+
+.hero[data-initialized="true"] * {
+  animation: none !important;
+}
+
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .hero .hero-path-plane {
+    animation: hero-architecture-environment
+      calc(var(--hero-finish) * var(--hero-sequence-scale)) linear backwards;
+  }
+
+  .hero .hero-path-foundation {
+    animation: hero-path-assemble
+      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-architecture) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-path-branch {
+    animation: hero-path-assemble
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-interface-node) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-branch-services {
+    animation-delay: calc(
+      var(--hero-services-node) * var(--hero-sequence-scale)
+    );
+  }
+
+  .hero .hero-data-path {
+    animation: hero-path-assemble
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-logo) * var(--hero-sequence-scale)) backwards;
+  }
+
+  /* Constant propagation speed keeps the segment and its physical nodes in sync. */
+  .hero .hero-signal-primary {
+    animation: hero-signal-travel
+      calc(var(--hero-signal-travel) * var(--hero-sequence-scale)) linear
+      calc(var(--hero-signal-start) * var(--hero-sequence-scale));
+  }
+
+  .hero .hero-signal-data {
+    animation: hero-signal-travel
+      calc(var(--hero-data-travel) * var(--hero-sequence-scale))
+      var(--ease-in-out)
+      calc(var(--hero-data-start) * var(--hero-sequence-scale));
+  }
+
+  .hero .hero-node-interface {
+    animation:
+      hero-node-activate
+        calc(var(--motion-standard) * var(--hero-sequence-scale))
+        var(--ease-out)
+        calc(var(--hero-interface-node) * var(--hero-sequence-scale)) backwards,
+      hero-node-echo calc(var(--motion-standard) * var(--hero-sequence-scale))
+        var(--ease-out) calc(var(--hero-interface) * var(--hero-sequence-scale));
+  }
+
+  .hero .hero-node-services {
+    animation: hero-node-activate
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-services-node) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-node-identity {
+    animation: hero-node-activate
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-logo) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-node-data {
+    animation: hero-node-activate
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(
+        (var(--hero-data-start) + var(--hero-data-travel)) *
+          var(--hero-sequence-scale)
+      )
+      backwards;
+  }
+
+  .hero .hero-label-interface {
+    animation: hero-label-echo
+      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-interface) * var(--hero-sequence-scale));
+  }
+
+  .hero .hero-label-data {
+    animation: hero-label-echo
+      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-infrastructure) * var(--hero-sequence-scale));
+  }
+
+  .hero .particle-logo-fallback {
+    animation: hero-mark-resolve
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-logo) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-load-title {
+    animation: hero-name-resolve
+      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-name) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-load-statement {
+    animation: hero-statement-resolve
+      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-interface) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-load-infrastructure {
+    animation-delay: calc(
+      var(--hero-infrastructure) * var(--hero-sequence-scale)
+    );
+  }
+
+  .hero .hero-load-support {
+    animation: hero-support-resolve
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-support) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-load-actions,
+  .hero .hero-load-secondary {
+    animation: hero-controls-resolve
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-support) * var(--hero-sequence-scale)) backwards;
+  }
+
+  .hero .hero-actions:focus-within {
+    animation: none;
+  }
+}
+
+@keyframes hero-architecture-environment {
+  0% {
+    opacity: 0.18;
+  }
+  18% {
+    opacity: 0.8;
+  }
+  45%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-path-assemble {
   from {
     stroke-dashoffset: 1;
   }
@@ -255,27 +351,77 @@
   }
 }
 
-@keyframes hero-node-resolve {
-  from {
+@keyframes hero-signal-travel {
+  0% {
+    stroke-dashoffset: 0.042;
     opacity: 0;
-    transform: scale(0.5);
   }
-  to {
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -1;
+    opacity: 0;
+  }
+}
+
+@keyframes hero-node-activate {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+    fill: var(--background);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.3);
+    fill: var(--accent);
+  }
+  100% {
     opacity: 1;
     transform: scale(1);
+    fill: var(--background);
   }
 }
 
-@keyframes hero-grid-resolve {
-  from {
-    opacity: 0;
+@keyframes hero-node-echo {
+  0%,
+  100% {
+    fill: var(--background);
+  }
+  45% {
+    fill: var(--accent);
   }
 }
 
-@keyframes hero-content-resolve {
+@keyframes hero-label-echo {
+  0%,
+  100% {
+    color: var(--text-subtle);
+  }
+  25% {
+    color: var(--accent);
+  }
+}
+
+@keyframes hero-mark-resolve {
+  from {
+    opacity: 0.12;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-name-resolve {
   from {
     opacity: 0;
-    translate: 0 8px;
+    translate: 0 var(--hero-name-distance);
+  }
+  15% {
+    opacity: 1;
   }
   to {
     opacity: 1;
@@ -283,86 +429,154 @@
   }
 }
 
-@keyframes hero-type-resolve {
+@keyframes hero-statement-resolve {
   from {
-    translate: 0 var(--hero-reveal-distance);
+    opacity: 0;
+    translate: 0 var(--hero-statement-distance);
+  }
+  15% {
+    opacity: 1;
   }
   to {
+    opacity: 1;
     translate: 0 0;
   }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .hero .hero-title-keyword:hover {
-    translate: none;
+@keyframes hero-support-resolve {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
   }
 }
 
-@media (max-width: 47.99rem), (pointer: coarse) {
-  .hero {
-    --hero-phase-step: calc(var(--stagger-tight) * 0.5);
-    --hero-reveal-time: var(--motion-standard);
-    --hero-reveal-distance: 24%;
+@keyframes hero-controls-resolve {
+  from {
+    opacity: 0.7;
   }
-
-  .hero .hero-scene,
-  .hero .hero-schematic-depth,
-  .hero .hero-scene-axis,
-  .hero .hero-grid-lines,
-  .hero .hero-kicker,
-  .hero .hero-mark,
-  .hero .hero-title,
-  .hero .hero-intro,
-  .hero .hero-foot {
-    transform: none;
-  }
-
-  .hero .hero-schematic-paths path:nth-child(3),
-  .hero .hero-schematic-paths path:nth-child(5),
-  .hero .hero-schematic-nodes circle:nth-child(4),
-  .hero .hero-schematic-nodes circle:nth-child(7) {
-    display: none;
-  }
-
-  .hero .hero-scene-readout {
-    display: none;
+  to {
+    opacity: 1;
   }
 }
 
 @media (max-width: 47.99rem) {
+  .hero {
+    --hero-sequence-scale: 0.65;
+    --hero-name-distance: 65%;
+    --hero-statement-distance: 35%;
+  }
+
+  .hero-system {
+    row-gap: 1.35rem;
+  }
+  .hero .hero-kicker {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .hero .hero-mark {
+    grid-column: 7 / -1;
+    grid-row: 2;
+    width: 100%;
+    height: clamp(6rem, 27vw, 7.5rem);
+    margin: 0;
+    transform: none;
+  }
+
+  .hero-path-plane {
+    position: relative;
+    inset: auto;
+    grid-column: 1 / 7;
+    grid-row: 2;
+    align-self: stretch;
+    height: 100%;
+  }
+  .hero-branch-services,
+  .hero-label-services {
+    display: none;
+  }
+  .hero-label-interface {
+    left: 0;
+    font-size: 0.48rem;
+  }
+  .hero-label-data {
+    font-size: 0.48rem;
+    bottom: -1.1rem;
+  }
   .hero .hero-load-title {
     font-size: clamp(2.6rem, 13.6vw, 5.8rem);
   }
+  .hero .hero-title-statement {
+    max-width: none;
+  }
+  .hero .hero-title {
+    margin-top: 1.2rem;
+    transform: none;
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero [class*="hero-load"],
-  .hero .hero-grid-lines,
-  .hero .hero-scene-readout,
-  .hero .hero-mark-index,
-  .hero .hero-schematic path,
-  .hero .hero-schematic circle {
+@media (orientation: landscape) and (max-height: 30rem) {
+  .hero {
+    --hero-sequence-scale: 0.65;
+    --hero-name-distance: 65%;
+    --hero-statement-distance: 35%;
+    padding-top: calc(var(--header-height) + 1.25rem);
+    padding-bottom: 1.5rem;
+  }
+  .hero .hero-mark {
+    height: 5rem;
+    transform: none;
+  }
+  .hero .hero-title {
+    margin-top: 0.5rem;
+    transform: none;
+  }
+  .hero .hero-load-title {
+    font-size: clamp(3rem, 8vw, 5.5rem);
+  }
+  .hero .hero-title-statement {
+    max-width: none;
+    margin-top: 0.75rem;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+  }
+  .hero .hero-intro {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+  }
+  .hero .hero-intro > p {
+    font-size: 0.85rem;
+  }
+  .hero .hero-actions {
+    margin-top: 0;
+  }
+  .hero .hero-foot {
+    margin-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (scripting: none) {
+  .hero *,
+  .hero *::before,
+  .hero *::after {
     animation: none !important;
     translate: none !important;
   }
-
-  .hero .hero-schematic path {
-    stroke-dashoffset: 0;
-  }
-  .hero .hero-schematic circle {
-    opacity: 1;
-  }
-
-  .hero .hero-scene,
-  .hero .hero-schematic-depth,
-  .hero .hero-scene-axis,
-  .hero .hero-scene-readout,
+  .hero .hero-path-plane,
   .hero .hero-grid-lines,
-  .hero .hero-kicker,
   .hero .hero-mark,
   .hero .hero-title,
   .hero .hero-intro,
   .hero .hero-foot {
     transform: none !important;
+    opacity: 1 !important;
+  }
+  .hero .hero-signal {
+    display: none;
   }
 }

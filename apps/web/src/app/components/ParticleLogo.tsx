@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { duration, stagger } from "./motion/tokens";
+import {
+  HERO_COMPACT_TIME_SCALE,
+  heroSequence,
+  readHeroSequenceTime,
+} from "./heroSequence";
 
 const LOGO_PATH = "/brand/lenin-miranda-mark.png";
 const SOURCE_SIZE = 512;
-const INTRO_DURATION = (duration.reveal + duration.fast) * 1000;
-const INTERACTION_RADIUS = 72;
-const MAX_REPULSION = 5;
 
 type LogoPoint = { x: number; y: number };
 type Particle = {
@@ -15,8 +17,6 @@ type Particle = {
   duration: number;
   endX: number;
   endY: number;
-  offsetX: number;
-  offsetY: number;
   opacity: number;
   radius: number;
   startX: number;
@@ -105,28 +105,19 @@ function buildParticles(
   const logoSize = Math.min(width * 0.7, height * 1.65, 330);
   const centerX = width / 2;
   const centerY = height / 2;
-  return shuffledPoints.slice(0, compact ? 220 : 420).map((point) => {
+  const timeScale = compact ? HERO_COMPACT_TIME_SCALE : 1;
+  return shuffledPoints.slice(0, compact ? 240 : 420).map((point) => {
     const endX = centerX + point.x * logoSize;
     const endY = centerY + point.y * logoSize;
     return {
-      delay:
-        (stagger.tight * 2 +
-          (point.x + 0.5) * stagger.content +
-          random() * stagger.tight) *
-        1000,
-      duration:
-        (duration.standard + random() * duration.fast) *
-        1000 *
-        (compact ? 0.7 : 1),
+      delay: ((point.x + 0.5) * stagger.tight + random() * 0.025) * timeScale,
+      duration: (duration.standard + random() * duration.micro) * timeScale,
       endX,
       endY,
-      offsetX: 0,
-      offsetY: 0,
-      opacity: 0.68 + random() * 0.32,
-      radius: (compact ? 0.95 : 1.1) + random() * 0.55,
-      // Points resolve from adjacent data lanes, never from a distant cloud.
+      opacity: 0.72 + random() * 0.28,
+      radius: (compact ? 0.95 : 1.1) + random() * 0.5,
       startX: centerX + (Math.round(point.x * 12) / 12) * logoSize,
-      startY: endY + (point.y < 0 ? -1 : 1) * (compact ? 10 : 22),
+      startY: endY + (point.y < 0 ? -1 : 1) * (compact ? 8 : 16),
     };
   });
 }
@@ -137,84 +128,43 @@ export default function ParticleLogo() {
   useEffect(() => {
     const canvas = canvasRef.current;
     const parent = canvas?.parentElement;
-    if (!canvas || !parent) return;
+    const hero = canvas?.closest<HTMLElement>(".hero");
+    if (!canvas || !parent || !hero) return;
     const context = canvas.getContext("2d", { desynchronized: true });
     if (!context) return;
 
     const reducedQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const pointerQuery = window.matchMedia(
-      "(hover: hover) and (pointer: fine)",
+    const compactQuery = window.matchMedia(
+      "(max-width: 47.99rem), (orientation: landscape) and (max-height: 30rem)",
     );
-    const compactQuery = window.matchMedia("(max-width: 47.99rem)");
     const image = new Image();
-    const pointer = { active: false, x: 0, y: 0 };
-    let animationFrame = 0;
+    let frame = 0;
+    let wakeTimer = 0;
     let disposed = false;
     let visible = false;
-    let introStartedAt: number | null = null;
-    let lastTimestamp = 0;
     let width = 0;
     let height = 0;
     let pixelRatio = 1;
     let points: LogoPoint[] = [];
     let particles: Particle[] = [];
 
-    const canInteract = () =>
-      !reducedQuery.matches && pointerQuery.matches && !compactQuery.matches;
-    const draw = (elapsed: number, deltaTime: number) => {
-      const reduced = reducedQuery.matches;
-      const interactive = canInteract();
-      let needsAnotherFrame = !reduced && elapsed < INTRO_DURATION;
-      let hasVisiblePoints = false;
-      const interpolation = 1 - Math.exp(-deltaTime / (duration.fast * 500));
+    const draw = (elapsed: number) => {
+      let complete = true;
       context.clearRect(0, 0, width, height);
       context.fillStyle = "#f5f2ea";
-
       for (const particle of particles) {
-        const progress = reduced
-          ? 1
-          : Math.min(
-              Math.max((elapsed - particle.delay) / particle.duration, 0),
-              1,
-            );
+        const progress = Math.min(
+          Math.max((elapsed - particle.delay) / particle.duration, 0),
+          1,
+        );
+        if (progress < 1) complete = false;
         if (progress <= 0) continue;
-        hasVisiblePoints = true;
         const eased = 1 - Math.pow(1 - progress, 4);
-        const baseX =
-          particle.startX + (particle.endX - particle.startX) * eased;
-        const baseY =
-          particle.startY + (particle.endY - particle.startY) * eased;
-        let targetX = 0;
-        let targetY = 0;
-
-        if (interactive && progress === 1 && pointer.active) {
-          const deltaX = particle.endX - pointer.x;
-          const deltaY = particle.endY - pointer.y;
-          const distance = Math.hypot(deltaX, deltaY);
-          if (distance > 0.001 && distance < INTERACTION_RADIUS) {
-            const force =
-              Math.pow(1 - distance / INTERACTION_RADIUS, 2) * MAX_REPULSION;
-            targetX = (deltaX / distance) * force;
-            targetY = (deltaY / distance) * force;
-          }
-        }
-
-        const deltaX = targetX - particle.offsetX;
-        const deltaY = targetY - particle.offsetY;
-        particle.offsetX = reduced
-          ? 0
-          : particle.offsetX + deltaX * interpolation;
-        particle.offsetY = reduced
-          ? 0
-          : particle.offsetY + deltaY * interpolation;
-        if (!reduced && (Math.abs(deltaX) > 0.04 || Math.abs(deltaY) > 0.04))
-          needsAnotherFrame = true;
-
         context.globalAlpha = particle.opacity * Math.min(progress * 4, 1);
         context.beginPath();
         context.arc(
-          baseX + particle.offsetX,
-          baseY + particle.offsetY,
+          particle.startX + (particle.endX - particle.startX) * eased,
+          particle.startY + (particle.endY - particle.startY) * eased,
           particle.radius,
           0,
           Math.PI * 2,
@@ -222,43 +172,44 @@ export default function ParticleLogo() {
         context.fill();
       }
       context.globalAlpha = 1;
-      if (hasVisiblePoints) parent.dataset.ready = "true";
-      return needsAnotherFrame;
+      parent.dataset.ready = "true";
+      parent.dataset.settled = String(complete);
+      return complete;
     };
 
-    const tick = (timestamp: number) => {
-      animationFrame = 0;
-      if (disposed || !visible || document.hidden || points.length === 0)
+    const stop = () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(wakeTimer);
+      frame = 0;
+      wakeTimer = 0;
+    };
+    const render = () => {
+      frame = 0;
+      wakeTimer = 0;
+      if (disposed || !visible || document.hidden || !particles.length) return;
+      const time = readHeroSequenceTime(hero);
+      if (reducedQuery.matches || time === null) {
+        draw(Number.POSITIVE_INFINITY);
         return;
-      const deltaTime = lastTimestamp
-        ? Math.min(timestamp - lastTimestamp, 40)
-        : 16;
-      lastTimestamp = timestamp;
-      if (draw(timestamp - (introStartedAt ?? timestamp), deltaTime)) {
-        animationFrame = window.requestAnimationFrame(tick);
-      } else {
-        lastTimestamp = 0;
+      }
+      const logoCue =
+        heroSequence.logo *
+        (compactQuery.matches ? HERO_COMPACT_TIME_SCALE : 1);
+      if (time < logoCue) {
+        // Sleep until the shared signal reaches the LM node; no idle canvas loop.
+        wakeTimer = window.setTimeout(render, (logoCue - time) * 1000);
+      } else if (!draw(time - logoCue)) {
+        frame = requestAnimationFrame(render);
       }
     };
-
-    const requestDraw = () => {
-      if (!animationFrame && visible && !document.hidden && points.length > 0) {
-        animationFrame = window.requestAnimationFrame(tick);
-      }
+    const schedule = () => {
+      if (!frame && !wakeTimer && visible && !document.hidden)
+        frame = requestAnimationFrame(render);
     };
-
-    const stopDrawing = () => {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = 0;
-      lastTimestamp = 0;
-      pointer.active = false;
-    };
-
     const updateLayout = (force = false) => {
-      if (points.length === 0) return;
-      const bounds = canvas.getBoundingClientRect();
-      const nextWidth = Math.max(Math.round(bounds.width), 1);
-      const nextHeight = Math.max(Math.round(bounds.height), 1);
+      if (!points.length) return;
+      const nextWidth = Math.max(canvas.clientWidth, 1);
+      const nextHeight = Math.max(canvas.clientHeight, 1);
       const nextRatio = Math.min(window.devicePixelRatio || 1, 1.5);
       if (
         !force &&
@@ -273,58 +224,32 @@ export default function ParticleLogo() {
       canvas.width = Math.round(width * pixelRatio);
       canvas.height = Math.round(height * pixelRatio);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      particles = buildParticles(
-        points,
-        width,
-        height,
-        compactQuery.matches || !pointerQuery.matches,
-      );
-      // Preserve the intro clock on resize, orientation changes, and re-entry.
-      introStartedAt ??= performance.now();
-      requestDraw();
+      particles = buildParticles(points, width, height, compactQuery.matches);
+      schedule();
     };
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!canInteract() || event.pointerType === "touch") return;
-      const bounds = canvas.getBoundingClientRect();
-      pointer.x = event.clientX - bounds.left;
-      pointer.y = event.clientY - bounds.top;
-      pointer.active = true;
-      requestDraw();
-    };
-    const handlePointerLeave = () => {
-      pointer.active = false;
-      requestDraw();
-    };
-    const handleCapabilityChange = () => {
-      pointer.active = false;
+    const capabilityChanged = () => {
+      stop();
       updateLayout(true);
-      requestDraw();
+      schedule();
     };
-    const handleVisibilityChange = () => {
-      if (document.hidden) stopDrawing();
-      else requestDraw();
+    const visibilityChanged = () => {
+      if (document.hidden) stop();
+      else schedule();
     };
-
-    const resizeObserver = new ResizeObserver(() => updateLayout());
-    const intersectionObserver = new IntersectionObserver(([entry]) => {
+    const observer = new IntersectionObserver(([entry]) => {
       visible = entry?.isIntersecting ?? false;
-      if (visible) requestDraw();
-      else stopDrawing();
+      if (visible) schedule();
+      else stop();
     });
+    const resizeObserver = new ResizeObserver(() => updateLayout());
+    observer.observe(canvas);
     resizeObserver.observe(canvas);
-    intersectionObserver.observe(canvas);
-    parent.addEventListener("pointermove", handlePointerMove, {
-      passive: true,
-    });
-    parent.addEventListener("pointerleave", handlePointerLeave);
-    reducedQuery.addEventListener("change", handleCapabilityChange);
-    pointerQuery.addEventListener("change", handleCapabilityChange);
-    compactQuery.addEventListener("change", handleCapabilityChange);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    reducedQuery.addEventListener("change", capabilityChanged);
+    compactQuery.addEventListener("change", capabilityChanged);
+    document.addEventListener("visibilitychange", visibilityChanged);
 
     image.onload = () => {
-      if (disposed || points.length > 0) return;
+      if (disposed || points.length) return;
       points = collectLogoPoints(image);
       updateLayout();
     };
@@ -333,15 +258,12 @@ export default function ParticleLogo() {
     return () => {
       disposed = true;
       image.onload = null;
+      observer.disconnect();
       resizeObserver.disconnect();
-      intersectionObserver.disconnect();
-      parent.removeEventListener("pointermove", handlePointerMove);
-      parent.removeEventListener("pointerleave", handlePointerLeave);
-      reducedQuery.removeEventListener("change", handleCapabilityChange);
-      pointerQuery.removeEventListener("change", handleCapabilityChange);
-      compactQuery.removeEventListener("change", handleCapabilityChange);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      stopDrawing();
+      reducedQuery.removeEventListener("change", capabilityChanged);
+      compactQuery.removeEventListener("change", capabilityChanged);
+      document.removeEventListener("visibilitychange", visibilityChanged);
+      stop();
     };
   }, []);
 

@@ -48,25 +48,6 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <p className="project-positioning">{project.positioning}</p>
           </RevealItem>
 
-          <dl className="project-notes">
-            <RevealItem>
-              <dt>What I built</dt>
-              <dd>{project.build}</dd>
-            </RevealItem>
-            <RevealItem>
-              <dt>Engineering challenge</dt>
-              <dd>{project.challenge}</dd>
-            </RevealItem>
-            <RevealItem>
-              <dt>Result</dt>
-              <dd>{project.result}</dd>
-            </RevealItem>
-          </dl>
-
-          <RevealItem level="meta">
-            <p className="project-stack">{project.stack.join(" / ")}</p>
-          </RevealItem>
-
           <RevealItem>
             <ProjectTransitionLink
               ariaLabel={`View ${project.title} case study`}
@@ -78,23 +59,42 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             </ProjectTransitionLink>
           </RevealItem>
 
-          <RevealItem level="meta">
-            <div className="project-links">
-              {project.links.map((link) => (
-                <a
-                  className="text-link text-link-light"
-                  href={link.href}
-                  key={link.href}
-                  rel="noreferrer noopener"
-                  target="_blank"
-                >
-                  {link.label}
-                  <span className="sr-only">, opens in a new tab</span>
-                  <ArrowUpRight />
-                </a>
-              ))}
+          <dl className="project-notes">
+            <div>
+              <dt>What I built</dt>
+              <dd>{project.build}</dd>
             </div>
-          </RevealItem>
+            <div>
+              <dt>Engineering challenge</dt>
+              <dd>{project.challenge}</dd>
+            </div>
+            <div>
+              <dt>Result</dt>
+              <dd>{project.result}</dd>
+            </div>
+          </dl>
+
+          <ul aria-label="Technology" className="project-stack">
+            {project.stack.map((technology) => (
+              <li key={technology}>{technology}</li>
+            ))}
+          </ul>
+
+          <div className="project-links">
+            {project.links.map((link) => (
+              <a
+                className="text-link text-link-light"
+                href={link.href}
+                key={link.href}
+                rel="noreferrer noopener"
+                target="_blank"
+              >
+                {link.label}
+                <span className="sr-only">, opens in a new tab</span>
+                <ArrowUpRight />
+              </a>
+            ))}
+          </div>
         </RevealGroup>
       </div>
     </article>

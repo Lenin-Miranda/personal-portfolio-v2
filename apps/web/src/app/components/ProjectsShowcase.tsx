@@ -6,7 +6,6 @@ import {
 import { ArrowUpRight } from "./Icons";
 import ProjectCard from "./ProjectCard";
 import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
-import { stagger } from "./motion/tokens";
 
 export default function ProjectsShowcase() {
   return (
@@ -49,16 +48,11 @@ export default function ProjectsShowcase() {
 
           <div className="additional-project-list">
             {ADDITIONAL_PROJECTS.map((project) => (
-              <RevealGroup
-                amount={0.28}
-                className="additional-project"
-                key={project.title}
-                stagger={stagger.tight}
-              >
-                <RevealItem className="additional-project-number" level="meta">
+              <article className="additional-project" key={project.title}>
+                <div className="additional-project-number">
                   <span>{project.number}</span>
-                </RevealItem>
-                <RevealItem className="additional-project-copy">
+                </div>
+                <div className="additional-project-copy">
                   <div className="additional-project-titleline">
                     <h4>{project.title}</h4>
                     <span
@@ -69,8 +63,8 @@ export default function ProjectsShowcase() {
                     </span>
                   </div>
                   <p>{project.description}</p>
-                </RevealItem>
-                <RevealItem className="additional-project-meta" level="meta">
+                </div>
+                <div className="additional-project-meta">
                   <p>{project.stack.join(" / ")}</p>
                   {project.links.length > 0 ? (
                     <div>
@@ -88,8 +82,8 @@ export default function ProjectsShowcase() {
                       ))}
                     </div>
                   ) : null}
-                </RevealItem>
-              </RevealGroup>
+                </div>
+              </article>
             ))}
           </div>
         </div>

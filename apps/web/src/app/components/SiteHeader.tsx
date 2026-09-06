@@ -34,6 +34,8 @@ export default function SiteHeader() {
     let previousY = Math.max(0, window.scrollY);
     let directionAnchor = previousY;
     let direction = "up";
+    let compact = previousY > 56;
+    header.dataset.direction = direction;
 
     const update = () => {
       frame = 0;
@@ -46,9 +48,18 @@ export default function SiteHeader() {
         direction = nextDirection;
       }
 
-      header.dataset.scrolled = String(y > 48);
-      if (Math.abs(y - directionAnchor) > 12 || y < 48) {
-        header.dataset.direction = y < 48 ? "up" : direction;
+      // Separate entry/exit thresholds prevent trackpad jitter near the top
+      // from repeatedly changing the header's visual height.
+      if (y > 56) compact = true;
+      else if (y < 32) compact = false;
+      const scrolled = String(compact);
+      if (header.dataset.scrolled !== scrolled)
+        header.dataset.scrolled = scrolled;
+      if (Math.abs(y - directionAnchor) > 12 || !compact) {
+        const visibleDirection = compact ? direction : "up";
+        if (header.dataset.direction !== visibleDirection) {
+          header.dataset.direction = visibleDirection;
+        }
       }
       previousY = y;
     };

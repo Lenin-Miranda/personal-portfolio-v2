@@ -23,7 +23,7 @@
 
 .experience-timeline-node {
   position: absolute;
-  top: clamp(3rem, 5vw, 5rem);
+  top: clamp(2.75rem, 4vw, 4rem);
   left: -3px;
   width: 7px;
   height: 7px;
@@ -59,45 +59,75 @@
   color: var(--ink);
 }
 
-/* Keep progress in the outer gutter so it never competes with project proof. */
+/* A quiet desktop coordinate stays outside the reading column. */
 .continuity-rail {
+  --continuity-visible: 0;
+  --continuity-section-progress: 0;
+  --continuity-node-y: 0px;
+  position: fixed;
+  z-index: 65;
   top: 50%;
   right: calc(var(--page-gutter) / 2 - 8px);
-  bottom: auto;
   width: 16px;
   height: 7rem;
+  color: var(--text-subtle);
+  contain: layout paint style;
+  opacity: var(--continuity-visible);
+  pointer-events: none;
 }
 
+.continuity-rail[data-surface="paper"] {
+  color: var(--ink-subtle);
+}
+.continuity-marker-window {
+  position: relative;
+  height: 1.35rem;
+}
 .continuity-marker {
-  display: block;
+  position: absolute;
+  inset: 0;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
   text-align: center;
+  transition: opacity var(--motion-standard) var(--ease-out);
 }
-
-.continuity-marker > span:last-child,
-.continuity-marker-frame {
-  display: none;
-}
-
 .continuity-track {
+  position: absolute;
+  bottom: 0;
   left: 50%;
-  right: auto;
   width: 1px;
   height: 4rem;
-  transform: none;
 }
-
+.continuity-track::before,
+.continuity-track-fill {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+}
+.continuity-track::before {
+  content: "";
+  opacity: 0.3;
+}
 .continuity-track-fill {
   transform: scaleY(var(--continuity-section-progress));
   transform-origin: center top;
 }
-
 .continuity-track-node {
+  position: absolute;
   top: 0;
-  left: 0;
-  transform: translate3d(0, var(--continuity-node-x), 0);
+  left: -0.15rem;
+  width: 0.3rem;
+  height: 0.3rem;
   margin-top: -0.15rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--background);
+  transform: translate3d(0, var(--continuity-node-y), 0);
 }
-
+.continuity-rail[data-surface="paper"] .continuity-track-node {
+  background: var(--paper);
+}
 @media (max-width: 63.99rem) {
   .continuity-rail {
     display: none;
@@ -106,14 +136,6 @@
 
 /* The quieter chapter lets the human context and principles carry the rhythm. */
 @media (min-width: 64rem) {
-  .experience-entry {
-    min-height: clamp(25rem, 58dvh, 38rem);
-  }
-
-  .about-section .about-heading {
-    min-height: clamp(23rem, 48dvh, 35rem);
-  }
-
   .principles,
   .capabilities,
   .education {

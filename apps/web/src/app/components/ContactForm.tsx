@@ -155,9 +155,7 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
   }
 
   function handleFieldKeyDown(
-    event: KeyboardEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
 
@@ -422,7 +420,6 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
                     onChange={(event) =>
                       updateValue("intent", event.target.value)
                     }
-                    onKeyDown={handleFieldKeyDown}
                     required
                     value={values.intent}
                   >

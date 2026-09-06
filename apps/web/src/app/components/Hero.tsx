@@ -8,54 +8,98 @@ import "./hero-motion.css";
 export default function Hero() {
   return (
     <HeroInteraction>
-      <div aria-hidden="true" className="hero-scene">
-        <div className="hero-schematic-depth">
-          <svg
-            className="hero-schematic"
-            preserveAspectRatio="none"
-            viewBox="0 0 1440 900"
-          >
-            <g className="hero-schematic-paths">
-              <path d="M54 178H344V244H548" pathLength="1" />
-              <path d="M886 164H1004V246H1386" pathLength="1" />
-              <path d="M1004 246V340H1226V422H1386" pathLength="1" />
-              <path d="M548 710H724V636H930V728H1118" pathLength="1" />
-              <path d="M1118 728H1260V652H1386" pathLength="1" />
-            </g>
-            <g className="hero-schematic-nodes">
-              <circle cx="344" cy="178" r="4" />
-              <circle cx="548" cy="244" r="4" />
-              <circle cx="1004" cy="246" r="4" />
-              <circle cx="1226" cy="422" r="4" />
-              <circle cx="724" cy="636" r="4" />
-              <circle cx="930" cy="728" r="4" />
-              <circle cx="1260" cy="652" r="4" />
-            </g>
-          </svg>
-        </div>
-
-        <div className="hero-scene-axis hero-scene-axis-horizontal" />
-        <div className="hero-scene-axis hero-scene-axis-vertical" />
-
-        <div className="hero-scene-readout">
-          <span>Signal path</span>
-          <span>Interface → services → data</span>
-        </div>
-      </div>
-
       <div aria-hidden="true" className="hero-grid-lines" />
 
       <div className="hero-inner">
-        <div className="hero-kicker hero-load-meta">
-          <p>{SITE.role}</p>
-          <p>{SITE.location}</p>
-        </div>
+        <div className="hero-system">
+          <div aria-hidden="true" className="hero-path-plane">
+            <svg
+              className="hero-architecture"
+              viewBox="0 0 800 240"
+              preserveAspectRatio="none"
+            >
+              <path
+                className="hero-path-foundation"
+                d="M0 148H240V88H480V148H800"
+                pathLength="1"
+              />
+              <path
+                className="hero-path-branch hero-branch-interface"
+                d="M240 148V208H80"
+                pathLength="1"
+              />
+              <path
+                className="hero-path-branch hero-branch-services"
+                d="M480 148V208H660"
+                pathLength="1"
+              />
+              <path
+                className="hero-signal hero-signal-primary"
+                d="M0 148H240V88H480V148H800"
+                pathLength="1"
+              />
+              <circle
+                className="hero-node hero-node-interface"
+                cx="240"
+                cy="148"
+                r="4"
+              />
+              <circle
+                className="hero-node hero-node-services"
+                cx="480"
+                cy="148"
+                r="4"
+              />
+            </svg>
+            <div className="hero-system-labels">
+              <span className="hero-label-interface">01 / Interface</span>
+              <span className="hero-label-services">02 / Services</span>
+            </div>
+          </div>
 
-        <div className="hero-mark hero-load-mark">
-          <ParticleLogo />
-          <span aria-hidden="true" className="hero-mark-index">
-            LM / 26
-          </span>
+          <div className="hero-kicker">
+            <p>{SITE.role}</p>
+            <p>{SITE.location}</p>
+          </div>
+
+          <div className="hero-mark">
+            <svg
+              aria-hidden="true"
+              className="hero-mark-architecture"
+              viewBox="0 0 400 240"
+              preserveAspectRatio="none"
+            >
+              <path
+                className="hero-data-path"
+                d="M0 148V220H360V190H400"
+                pathLength="1"
+              />
+              <path
+                className="hero-signal hero-signal-data"
+                d="M0 148V220H360V190H400"
+                pathLength="1"
+              />
+              <circle
+                className="hero-node hero-node-identity"
+                cx="0"
+                cy="148"
+                r="4"
+              />
+              <circle
+                className="hero-node hero-node-data"
+                cx="400"
+                cy="190"
+                r="4"
+              />
+            </svg>
+            <ParticleLogo />
+            <span aria-hidden="true" className="hero-mark-index">
+              LM / 26
+            </span>
+            <span aria-hidden="true" className="hero-label-data">
+              03 / Data
+            </span>
+          </div>
         </div>
 
         <h1 className="hero-title" id="hero-title">

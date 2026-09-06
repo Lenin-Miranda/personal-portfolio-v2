@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { PROJECT_STATUS_LABELS, type FeaturedProject } from "../data/portfolio";
 import { ArrowUpRight } from "./Icons";
 import ProjectBackLink from "./ProjectBackLink";
+import { establishProjectOrigin } from "./ProjectRouteTransition";
 import ProjectVisual from "./ProjectVisual";
 import { distance, duration, ease, stagger } from "./motion/tokens";
 import { useMotionCapabilities } from "./motion/useMotionCapabilities";
@@ -48,6 +49,9 @@ export default function ProjectCaseStudyHero({
   const copyY = useTransform(scrollYProgress, [0, 1], [0, -22]);
 
   useEffect(() => {
+    // A slow route can mount after the browser releases its transition snapshot.
+    // Record only this committed page's context; no delayed scroll/focus work.
+    establishProjectOrigin(project.id);
     if (reduceMotion) {
       const frame = window.requestAnimationFrame(() => setIsEstablished(true));
       return () => window.cancelAnimationFrame(frame);
@@ -70,7 +74,7 @@ export default function ProjectCaseStudyHero({
 
     const frame = window.requestAnimationFrame(reveal);
     return () => window.cancelAnimationFrame(frame);
-  }, [reduceMotion]);
+  }, [project.id, reduceMotion]);
 
   const transition = (delay: number, timing: number = duration.reveal) => ({
     delay: reduceMotion ? 0 : compact ? delay * 0.65 : delay,

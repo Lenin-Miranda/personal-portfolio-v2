@@ -21,6 +21,13 @@ type StartTransitionOptions = {
 
 let transitionInFlight = false;
 let activeOrigin: ProjectOrigin | null = null;
+let pendingOrigin: ProjectOrigin | null = null;
+
+function clearPendingOrigin() {
+  pendingOrigin = null;
+  window.removeEventListener("popstate", clearPendingOrigin);
+  window.removeEventListener("pagehide", clearPendingOrigin);
+}
 
 function isProjectOrigin(value: unknown): value is ProjectOrigin {
   if (!value || typeof value !== "object") return false;
@@ -56,12 +63,34 @@ function storeOrigin(slug: string) {
     slug,
   };
   activeOrigin = origin;
+  clearPendingOrigin();
+  pendingOrigin = origin;
+  window.addEventListener("popstate", clearPendingOrigin, { once: true });
+  window.addEventListener("pagehide", clearPendingOrigin, { once: true });
   try {
     window.sessionStorage.setItem(ORIGIN_STORAGE_KEY, JSON.stringify(origin));
   } catch {
     // The in-memory origin still restores context when storage is unavailable.
   }
   return origin;
+}
+
+/** Route context belongs to the committed page, even after its visual bailout. */
+export function establishProjectOrigin(slug: string) {
+  const origin = pendingOrigin;
+  if (!origin) return;
+  clearPendingOrigin();
+  if (
+    origin.slug !== slug ||
+    window.location.pathname !== `/projects/${slug}` ||
+    !isProjectOrigin(origin)
+  )
+    return;
+
+  window.history.replaceState(
+    { ...window.history.state, [ORIGIN_HISTORY_KEY]: origin },
+    "",
+  );
 }
 
 function waitForElement(selector: string, signal: AbortSignal) {
@@ -235,7 +264,7 @@ export function openProject(
   source: HTMLElement,
 ) {
   if (transitionInFlight) return;
-  const origin = storeOrigin(slug);
+  storeOrigin(slug);
   if (window.location.hash) {
     window.history.replaceState(
       window.history.state,
@@ -248,11 +277,7 @@ export function openProject(
     navigate: () => router.push(`/projects/${slug}`),
     onTargetReady: () => {
       window.scrollTo({ behavior: "instant", left: 0, top: 0 });
-      // Match the saved origin to this history entry, including after a reload.
-      window.history.replaceState(
-        { ...window.history.state, [ORIGIN_HISTORY_KEY]: origin },
-        "",
-      );
+      establishProjectOrigin(slug);
     },
     source,
     targetSelector: `[data-project-hero-media="${slug}"]`,

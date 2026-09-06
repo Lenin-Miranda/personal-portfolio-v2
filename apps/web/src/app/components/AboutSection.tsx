@@ -1,5 +1,5 @@
 import { CAPABILITIES, EDUCATION, PRINCIPLES } from "../data/portfolio";
-import Reveal, { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
+import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 
 export default function AboutSection() {
   return (
@@ -64,18 +64,14 @@ export default function AboutSection() {
             </MaskedReveal>
           </RevealGroup>
           <div className="capability-list">
-            {CAPABILITIES.map((capability, index) => (
-              <Reveal
-                className="capability"
-                delay={(index % 2) * 0.075}
-                key={capability.label}
-              >
+            {CAPABILITIES.map((capability) => (
+              <div className="capability" key={capability.label}>
                 <h4>{capability.label}</h4>
                 <p>{capability.description}</p>
                 <p className="technology-line">
                   {capability.tools.join(" / ")}
                 </p>
-              </Reveal>
+              </div>
             ))}
           </div>
         </section>
@@ -92,17 +88,12 @@ export default function AboutSection() {
             </MaskedReveal>
           </RevealGroup>
           <div className="education-list">
-            {EDUCATION.map((item, index) => (
-              <Reveal
-                amount={0.3}
-                className="education-entry"
-                delay={(index % 2) * 0.075}
-                key={item.institution}
-              >
+            {EDUCATION.map((item) => (
+              <div className="education-entry" key={item.institution}>
                 <span>{item.year}</span>
                 <h4>{item.institution}</h4>
                 <p>{item.detail}</p>
-              </Reveal>
+              </div>
             ))}
           </div>
         </section>

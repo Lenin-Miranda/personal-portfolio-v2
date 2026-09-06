@@ -11,6 +11,7 @@
     "check": "turbo run lint typecheck",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "test:e2e": "pnpm --filter @portfolio/web test:e2e",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
