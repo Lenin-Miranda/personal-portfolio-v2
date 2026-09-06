@@ -2,24 +2,34 @@
 
 The portfolio uses a finite system initialization as its strongest motion moment. Experience and featured work retain useful orientation and media transitions; supporting work and About become progressively quieter. Native scrolling and the existing editorial design remain intact. This refinement changes presentation, not portfolio claims, and adds no runtime dependencies.
 
-## Hero: one system coming online
+## Hero: system discovery becomes identity
 
-`heroSequence.ts` defines the choreography and publishes it as CSS custom properties. `hero-motion.css` owns the SVG and typography sequence. `ParticleLogo` reads the same CSS animation clock, so delayed asset decoding does not launch a second introduction.
+The signature opening transforms the composition itself. A large architecture occupies the title's reserved area; a diagnostic scan reveals it, one signal traverses Interface → Services → AI/Processing → Data, and the graph converges into LM. Typography then takes over the same visual space. Controls stay usable throughout.
 
-| Desktop cue | Behavior                                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 0–140ms     | The layout is already reserved; the architectural foundation begins to connect. Controls remain usable.                  |
-| 140–760ms   | A single bright segment follows the primary path. Interface and Services activate as it arrives, opening their branches. |
-| 760ms       | The signal reaches the LM junction and the particle mark resolves from short construction lanes.                         |
-| 860ms       | Lenin Miranda opens through one vertical mask.                                                                           |
-| 1080–1360ms | The paired positioning lines resolve; Interface briefly echoes and a continuation reaches Data alongside infrastructure. |
-| 1350–1850ms | Supporting copy appears and the environment settles completely.                                                          |
+`HeroArchitecture.tsx` owns two intentional diagram compositions: the large temporary discovery stage and the restrained resting rail. `heroSequence.ts` publishes a shared CSS clock. The canvas reads that clock, so delayed assets or hydration join the current phase instead of launching a separate introduction.
 
-There is no loading overlay, blocking intro, pointer parallax, particle repulsion, or repeating ambient signal. Initialization ends at about 1.85 seconds on desktop. Compact screens and short landscape layouts scale it to 65% (about 1.2 seconds), shorten masks, and use fewer logo points. Phone portrait also removes a supporting branch and label.
+| Desktop cue | Behavior                                                                                                                                                              |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0–80ms      | Final document dimensions already exist. Grid is dormant; actions and navigation are usable.                                                                          |
+| 80–560ms    | A thin scan moves across the title area, revealing routes, sparse coordinates, node outlines, and labels through a clipping mask.                                     |
+| 580–1280ms  | One accent segment follows the primary system route and activates its four software-layer nodes before reaching the identity junction.                                |
+| 1280–1800ms | The whole graph contracts and travels toward the actual LM center. Its main path retracts into a final fragment. Temporary labels disappear early in the convergence. |
+| 1450–2055ms | Three construction lanes feed structured particle streams into LM while the last diagram fragments are still converging.                                              |
+| 1580–2220ms | The name claims the center with a horizontal wipe, a 0.96-scale start, and a small controlled settle. No letter-by-letter motion or blur is used.                     |
+| 1910–2450ms | Interface resolves alongside its node echo; infrastructure resolves alongside the Services/AI/Data signal continuation and completion tick.                           |
+| 2140–2500ms | Supporting copy becomes visible; the entire sequence stops.                                                                                                           |
 
-The architecture occupies one stable grid band and physically joins the LM junction. The diagram and identity recede by at most 12px during desktop native scrolling; the line-and-node vocabulary continues in the Experience timeline. A literal animated path morph was deliberately avoided: additional geometry coordination would not improve orientation. Compact and reduced-motion modes omit hero scroll recession.
+| Before                                 | After                                                                        | Why                                                                      |
+| -------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| A small animated strip above the title | Architecture temporarily occupies the title area, then converges into LM     | The entire composition changes before the identity takes over.           |
+| Logo points moved only a few pixels    | Three grid-aligned source rows feed inward and bend into the glyph           | The graph and particles share a visible transfer.                        |
+| A vertical name mask                   | One editorial name object uses a horizontal wipe and restrained scale settle | Typography becomes the second focal event without per-letter decoration. |
 
-Default CSS is the readable final state. Spatial entrances apply only when scripting is enabled and reduced motion is not requested. Reduced motion and no JavaScript expose architecture, fallback LM, and typography immediately, with no traveling signal. Focused hero actions become fully visible immediately.
+The introduction lasts 2.5 seconds on desktop and 1.6 seconds on compact/short landscape layouts (64% time scale). Phone portrait has its own three-node routing geometry, combining Services/AI, fewer coordinate marks, 240 particles, and shorter travel. Tablet keeps the four-layer route with reduced branches and coordinate emphasis. Short landscape uses a lower stage and the compact clock.
+
+The discovery layer is absolute. `HeroInteraction` measures the mark and stage once per geometry change, stores the collapse destination locally on the stage, and never reads layout in the animation loop. Convergence uses transforms and SVG stroke retraction. The final rail stays attached to the LM frame. Desktop native scrolling retains the existing recession of at most 12px; compact and reduced-motion modes omit it.
+
+Default CSS is the readable final state. Reduced motion and no JavaScript hide discovery, scan, signal travel, construction lanes, and spatial typography effects. Architecture, LM fallback, identity, copy, and actions remain immediately available. There is no loading overlay, pointer parallax, particle repulsion, repeat pulse, or ambient loop.
 
 ## Shared vocabulary and restraint
 
@@ -54,7 +64,7 @@ Removed: hero pointer depth, logo repulsion, duplicate section content movement,
 Content remains in Server Components where practical; browser behavior is isolated in client components.
 
 - `HeroInteraction` owns native-scroll recession, cached geometry, sequence completion, and visibility/capability lifecycle. There are no hero pointer listeners or `--hero-x`, `--hero-y`, or `--hero-active` variables.
-- `ParticleLogo` caps work at 420 desktop points and 240 compact points, with a 1.5 DPR cap. It sleeps until the shared logo cue, stops after settling, pauses while hidden/offscreen, and redraws settled output after resize. Asset failure leaves a visible LM fallback.
+- `ParticleLogo` caps work at 420 desktop points and 240 compact points, with a 1.5 DPR cap. Its three source rows match the SVG lanes at 28%, 50%, and 72% of mark height. Grid-aligned points travel roughly 36–80px on desktop and 30–47px on compact layouts, first along a row, then through a controlled curve into LM. It sleeps until the shared logo cue, pauses while hidden/offscreen, and stops after settling. A settled latch prevents replay on later resize or preference changes. Asset failure leaves a visible LM fallback.
 - `useMotionCapabilities` shares live media-query subscriptions. `ProjectVisual` keeps its shared media DOM stable; `ProjectVisualInteraction` mounts only with a fine hover pointer, noncompact viewport, and no reduced-motion preference. Unsupported modes mount none of that controller's scroll, spring, or pointer hooks. Capability changes clean listeners and styles.
 - `SectionContinuity` keeps one scheduled scroll pass and cached measurements for surfaces, Experience progress, and the rail. Named helpers clarify ownership without multiplying hooks/listeners. It shrank from 416 to 272 lines. The rail uses a simple chapter number and progress; contrast follows the actual surface beneath its midpoint, including section handoffs. Tablet, phone, and reduced-motion modes hide it.
 - Geometry reads occur during measurement or pointer entry, not repeatedly during scroll rendering. Hidden documents pause scheduled work. No permanent hero loop, WebGL, or new rendering framework is used.
@@ -86,15 +96,36 @@ pnpm test:e2e
 
 Install Chromium once with `pnpm --filter @portfolio/web exec playwright install chromium`. Browser tests also build production output, start an isolated server on port 3100, and stop it when finished. Avoid concurrent production builds using the same `.next` directory.
 
-Refinement validation on September 6, 2026: all four commands passed, including all 18 browser cases. Changed source and documentation also passed Prettier and `git diff --check`.
+Signature Hero validation on September 6, 2026: all four commands passed, including all 36 browser cases (18 Hero and 18 project-navigation cases). Changed source and documentation also passed Prettier and `git diff --check`.
 
 `apps/web/e2e/project-navigation.spec.ts` contains nine tests in desktop and phone profiles (18 cases): keyboard home/case/return, exact scroll and focus restoration, direct URLs, browser Back, reload, repeated activation/history integrity, reduced motion, unavailable View Transitions API, stalled image decoding, and a response delayed beyond the transition guard. Some tests cover multiple guarantees. Assertions poll observable outcomes instead of assuming animation timing; console/runtime errors fail the suite. See `apps/web/e2e/README.md` for traces and reporting.
+
+`apps/web/e2e/hero.spec.ts` adds completed/readable content, stopped CSS/canvas work, first-load layout stability, reduced motion with no animation starts, no-JavaScript fallback, five viewport bounds checks, and keyboard navigation while the intro is paused. Its assertions wait for observable states and do not require exact animation timing.
 
 Rendered viewport checks use 320×740, 390×844, 430×932, 768×1024, 844×390, and 1440×1000. Additional checks cover keyboard behavior, menu focus, the native dropdown, reduced motion, no JavaScript, pointer invariance, hero settling, and interruption. Phone profiles emulate Chromium; physical Safari and Android checks remain useful complementary coverage.
 
 Contact verification used a ten-line message at 320px, 390px, and landscape widths, plus intercepted error and success responses. The complete review text remained visible, focus stayed visible, and no live email was sent.
 
-## Refinement file inventory
+## Signature Hero file inventory
+
+Created:
+
+- `apps/web/src/app/components/HeroArchitecture.tsx`
+- `apps/web/e2e/hero.spec.ts`
+
+Modified:
+
+- `apps/web/src/app/components/Hero.tsx`
+- `apps/web/src/app/components/HeroInteraction.tsx`
+- `apps/web/src/app/components/ParticleLogo.tsx`
+- `apps/web/src/app/components/heroSequence.ts`
+- `apps/web/src/app/components/hero-motion.css`
+- `apps/web/e2e/README.md`
+- `docs/motion-system.md`
+
+The signature pass preserves portfolio copy, project data, navigation behavior, contact behavior, the existing motion primitives, and all previous project tests. It adds no dependency.
+
+## Previous refinement file inventory
 
 Created:
 

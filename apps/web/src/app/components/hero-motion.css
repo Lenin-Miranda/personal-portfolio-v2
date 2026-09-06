@@ -1,20 +1,17 @@
-/* A single finite system sequence. The unanimated/default state is complete,
-   including when scripting or motion is unavailable. Nothing follows a cursor. */
+/* One finite composition: discover the system, converge it into identity,
+   then leave the final editorial layout completely still. */
 .hero {
   --hero-sequence-scale: 1;
-  --hero-name-distance: 108%;
-  --hero-statement-distance: 75%;
+  --hero-collapse-scale: 0.16;
+  --hero-statement-distance: 32%;
 }
-
 .hero [class*="hero-load"] {
   animation: none;
 }
-
 .hero .hero-grid-lines {
   opacity: calc(0.72 - var(--hero-scroll, 0) * 0.2);
   transform: none;
 }
-
 .hero-system {
   position: relative;
   grid-column: 1 / -1;
@@ -23,22 +20,155 @@
   align-items: start;
   min-width: 0;
 }
-
 .hero .hero-kicker {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   align-items: flex-start;
   align-self: start;
   transform: none;
 }
 
+/* This absolute stage occupies the title's reserved space during discovery.
+   Only transforms change its composition; the document never changes size. */
+.hero-boot-stage {
+  position: absolute;
+  z-index: 2;
+  top: 2.75rem;
+  left: 0;
+  width: 100%;
+  height: clamp(20rem, 44dvh, 29rem);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.hero-boot-collapse,
+.hero-discovery-mask,
+.hero-discovery-diagram,
+.hero-boot-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hero-boot-collapse {
+  transform-origin: center;
+}
+.hero-discovery-mask {
+  clip-path: inset(0);
+}
+.hero-boot-svg {
+  overflow: visible;
+}
+.hero-boot-svg path,
+.hero-boot-svg circle,
+.hero-boot-svg rect {
+  fill: none;
+  stroke: rgb(243 240 232 / 46%);
+  stroke-width: 1;
+}
+.hero-boot-svg .hero-coordinate-lines {
+  stroke: rgb(243 240 232 / 8%);
+  vector-effect: non-scaling-stroke;
+}
+.hero-boot-svg .hero-coordinate-ticks {
+  stroke: rgb(243 240 232 / 38%);
+}
+.hero-boot-svg .hero-boot-branches {
+  stroke: rgb(243 240 232 / 23%);
+}
+.hero-boot-foundation {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.hero-boot-node {
+  --node-cue: calc(
+    (
+        var(--hero-signal-start) + var(--hero-signal-travel) *
+          var(--node-travel)
+      ) *
+      var(--hero-sequence-scale)
+  );
+}
+.hero-boot-node circle {
+  fill: var(--background);
+  stroke: var(--accent);
+}
+.hero-boot-node .hero-node-outline {
+  stroke: rgb(243 240 232 / 40%);
+}
+.hero-boot-junction circle {
+  stroke: var(--accent);
+}
+.hero-discovery-label {
+  --node-cue: calc(
+    (
+        var(--hero-signal-start) + var(--hero-signal-travel) *
+          var(--node-travel)
+      ) *
+      var(--hero-sequence-scale)
+  );
+  position: absolute;
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text);
+  font-size: clamp(0.62rem, 0.9vw, 0.8rem);
+  line-height: 1;
+  letter-spacing: 0.035em;
+  translate: 0 -100%;
+}
+.hero-discovery-label > span,
+.hero-system-origin,
+.hero-junction-label {
+  color: var(--text-subtle);
+  font-size: 0.54rem;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.hero-system-origin {
+  position: absolute;
+  left: 3.333%;
+  bottom: 3%;
+}
+.hero-junction-label {
+  position: absolute;
+  left: 50%;
+  top: 85%;
+  translate: -50% 0;
+}
+.hero-scan {
+  position: absolute;
+  inset: 7% 0 9%;
+  border-left: 1px solid rgb(243 240 232 / 68%);
+  opacity: 0;
+  pointer-events: none;
+}
+.hero-scan::before,
+.hero-scan::after {
+  position: absolute;
+  left: -3px;
+  width: 5px;
+  height: 1px;
+  background: var(--text-secondary);
+  content: "";
+}
+.hero-scan::before {
+  top: 0;
+}
+.hero-scan::after {
+  bottom: 0;
+}
+.hero-diagram-compact {
+  display: none;
+}
+
+/* The compact resting system stays attached to the identity frame. */
 .hero-path-plane {
   position: absolute;
   inset: 0 33.333% 0 0;
   pointer-events: none;
   opacity: calc(1 - var(--hero-scroll, 0) * 0.35);
 }
-
 .hero-architecture,
 .hero-mark-architecture {
   position: absolute;
@@ -48,37 +178,24 @@
   overflow: visible;
   pointer-events: none;
 }
-
 .hero-architecture path,
 .hero-mark-architecture path {
   fill: none;
   stroke-width: 1;
-  stroke: rgb(243 240 232 / 25%);
-  /* Normalized dash lengths must share the path's coordinate space. */
-  vector-effect: none;
+  stroke: rgb(243 240 232 / 23%);
 }
-
 .hero-architecture .hero-path-branch {
-  stroke: rgb(243 240 232 / 14%);
+  stroke: rgb(243 240 232 / 12%);
 }
-
-.hero-path-foundation,
-.hero-path-branch,
-.hero-data-path {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
-}
-
-.hero-architecture .hero-signal,
-.hero-mark-architecture .hero-signal {
+.hero .hero-signal {
   opacity: 0;
+  fill: none;
   stroke: var(--accent);
   stroke-width: 2;
   stroke-linecap: round;
-  stroke-dasharray: 0.042 1;
-  stroke-dashoffset: 0.042;
+  stroke-dasharray: 0.035 1;
+  stroke-dashoffset: 0.035;
 }
-
 .hero .hero-node {
   fill: var(--background);
   stroke: rgb(215 255 100 / 58%);
@@ -87,28 +204,30 @@
   transform-origin: center;
   vector-effect: non-scaling-stroke;
 }
-
 .hero-system-labels {
   position: absolute;
-  inset: auto 0 9%;
+  inset: auto 0 6%;
   color: var(--text-subtle);
-  font-size: 0.56rem;
+  font-size: 0.51rem;
   line-height: 1;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.065em;
   text-transform: uppercase;
 }
-
-.hero-label-interface,
-.hero-label-services {
+.hero-system-labels > span {
   position: absolute;
 }
 .hero-label-interface {
   left: 3%;
 }
 .hero-label-services {
-  left: 65%;
+  left: 30%;
 }
-
+.hero-label-processing {
+  left: 59%;
+}
+.hero-label-data {
+  left: 81%;
+}
 .hero .hero-mark {
   grid-column: 9 / -1;
   opacity: 1;
@@ -116,30 +235,35 @@
     scale(calc(1 - var(--hero-scroll, 0) * 0.02));
   transform-origin: left center;
 }
-
 .hero .hero-mark-index {
   top: var(--space-3);
   bottom: auto;
   font-size: 0.57rem;
 }
-
-.hero-label-data {
+.hero-label-identity {
   position: absolute;
   right: 0;
   bottom: -1.35rem;
   color: var(--text-subtle);
-  font-size: 0.56rem;
+  font-size: 0.51rem;
   line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
+.hero-construction-lanes {
+  opacity: 0;
+}
+.hero-construction-lanes path {
+  stroke: rgb(215 255 100 / 45%);
+}
+.hero-construction-lanes .hero-lane-ticks {
+  stroke: rgb(243 240 232 / 48%);
+}
 .hero .particle-logo {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-
 .hero .particle-logo-fallback {
   position: absolute;
   inset: 0;
@@ -151,16 +275,13 @@
   font-weight: 500;
   letter-spacing: -0.08em;
 }
-
 .hero .particle-logo[data-ready="true"] .particle-logo-fallback {
   visibility: hidden;
 }
-
 .hero .hero-title {
   opacity: 1;
   transform: translateY(calc(var(--hero-scroll, 0) * -12px));
 }
-
 .hero .hero-title-mask,
 .hero .hero-statement-mask {
   display: block;
@@ -168,24 +289,23 @@
   padding-block: 0.08em;
   margin-block: -0.08em;
 }
-
 .hero .hero-title-statement-mask,
 .hero .hero-statement-line {
   display: block;
 }
-
+.hero .hero-load-title {
+  transform-origin: left center;
+}
 .hero .hero-keyword-interface,
 .hero .hero-keyword-infrastructure {
   color: var(--text);
 }
-
 .hero .hero-keyword-infrastructure {
   text-decoration: underline;
   text-decoration-color: rgb(215 255 100 / 38%);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.13em;
 }
-
 .hero .hero-title-keyword {
   translate: none;
 }
@@ -194,171 +314,196 @@
   opacity: 1;
   transform: none;
 }
-
 .hero[data-initialized="true"] * {
   animation: none !important;
 }
 
 @media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  .hero .hero-path-plane {
-    animation: hero-architecture-environment
-      calc(var(--hero-finish) * var(--hero-sequence-scale)) linear backwards;
+  .hero-boot-stage {
+    animation: hero-system-clock
+      calc(var(--hero-finish) * var(--hero-sequence-scale)) linear;
   }
-
-  .hero .hero-path-foundation {
-    animation: hero-path-assemble
-      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-architecture) * var(--hero-sequence-scale)) backwards;
+  .hero-boot-collapse {
+    animation: hero-system-converge
+      calc(var(--hero-collapse-travel) * var(--hero-sequence-scale))
+      var(--ease-in-out) calc(var(--hero-collapse) * var(--hero-sequence-scale))
+      both;
   }
-
-  .hero .hero-path-branch {
-    animation: hero-path-assemble
+  .hero-discovery-mask {
+    animation: hero-discover
+      calc(var(--hero-scan-travel) * var(--hero-sequence-scale)) linear
+      calc(var(--hero-scan) * var(--hero-sequence-scale)) backwards;
+  }
+  .hero-scan {
+    animation: hero-scan-pass
+      calc(var(--hero-scan-travel) * var(--hero-sequence-scale)) linear
+      calc(var(--hero-scan) * var(--hero-sequence-scale));
+  }
+  .hero-boot-foundation {
+    animation: hero-route-retract
+      calc(var(--hero-collapse-travel) * var(--hero-sequence-scale))
+      var(--ease-in-out) calc(var(--hero-collapse) * var(--hero-sequence-scale))
+      both;
+  }
+  .hero-boot-node circle,
+  .hero-boot-node .hero-node-outline {
+    animation: hero-node-activate
       calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-interface-node) * var(--hero-sequence-scale)) backwards;
+      var(--node-cue);
   }
-
-  .hero .hero-branch-services {
-    animation-delay: calc(
-      var(--hero-services-node) * var(--hero-sequence-scale)
-    );
+  .hero-boot-node .hero-node-outline {
+    animation-name: hero-node-outline-activate;
   }
-
-  .hero .hero-data-path {
-    animation: hero-path-assemble
+  .hero-discovery-label {
+    animation:
+      hero-node-activate
+        calc(var(--motion-standard) * var(--hero-sequence-scale))
+        var(--ease-out) var(--node-cue),
+      hero-discovery-caption calc(0.18s * var(--hero-sequence-scale))
+        var(--ease-out) calc(var(--hero-collapse) * var(--hero-sequence-scale))
+        forwards;
+  }
+  .hero-system-origin,
+  .hero-junction-label {
+    animation: hero-discovery-caption calc(0.18s * var(--hero-sequence-scale))
+      var(--ease-out) calc(var(--hero-collapse) * var(--hero-sequence-scale))
+      forwards;
+  }
+  .hero-boot-junction {
+    animation: hero-junction-activate
       calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-logo) * var(--hero-sequence-scale)) backwards;
+      calc(var(--hero-collapse) * var(--hero-sequence-scale));
   }
-
-  /* Constant propagation speed keeps the segment and its physical nodes in sync. */
-  .hero .hero-signal-primary {
+  .hero .hero-boot-signal {
     animation: hero-signal-travel
       calc(var(--hero-signal-travel) * var(--hero-sequence-scale)) linear
       calc(var(--hero-signal-start) * var(--hero-sequence-scale));
   }
-
-  .hero .hero-signal-data {
-    animation: hero-signal-travel
-      calc(var(--hero-data-travel) * var(--hero-sequence-scale))
-      var(--ease-in-out)
-      calc(var(--hero-data-start) * var(--hero-sequence-scale));
+  .hero .hero-grid-lines {
+    animation: hero-grid-resolve
+      calc(var(--hero-finish) * var(--hero-sequence-scale)) var(--ease-out);
   }
-
-  .hero .hero-node-interface {
-    animation:
-      hero-node-activate
-        calc(var(--motion-standard) * var(--hero-sequence-scale))
-        var(--ease-out)
-        calc(var(--hero-interface-node) * var(--hero-sequence-scale)) backwards,
-      hero-node-echo calc(var(--motion-standard) * var(--hero-sequence-scale))
-        var(--ease-out) calc(var(--hero-interface) * var(--hero-sequence-scale));
-  }
-
-  .hero .hero-node-services {
-    animation: hero-node-activate
+  .hero .hero-path-plane,
+  .hero-mark-connection,
+  .hero-label-identity {
+    animation: hero-resting-resolve
       calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-services-node) * var(--hero-sequence-scale)) backwards;
+      calc(var(--hero-resting) * var(--hero-sequence-scale)) backwards;
   }
-
-  .hero .hero-node-identity {
-    animation: hero-node-activate
-      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-logo) * var(--hero-sequence-scale)) backwards;
+  .hero .hero-construction-lanes {
+    animation: hero-lanes-transfer calc(0.64s * var(--hero-sequence-scale))
+      var(--ease-in-out) calc(var(--hero-logo) * var(--hero-sequence-scale));
   }
-
-  .hero .hero-node-data {
-    animation: hero-node-activate
-      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(
-        (var(--hero-data-start) + var(--hero-data-travel)) *
-          var(--hero-sequence-scale)
-      )
-      backwards;
-  }
-
-  .hero .hero-label-interface {
-    animation: hero-label-echo
-      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-interface) * var(--hero-sequence-scale));
-  }
-
-  .hero .hero-label-data {
-    animation: hero-label-echo
-      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-infrastructure) * var(--hero-sequence-scale));
-  }
-
   .hero .particle-logo-fallback {
-    animation: hero-mark-resolve
+    animation: hero-resting-resolve
       calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
       calc(var(--hero-logo) * var(--hero-sequence-scale)) backwards;
   }
-
   .hero .hero-load-title {
     animation: hero-name-resolve
-      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-name-travel) * var(--hero-sequence-scale)) var(--ease-out)
       calc(var(--hero-name) * var(--hero-sequence-scale)) backwards;
   }
-
   .hero .hero-load-statement {
-    animation: hero-statement-resolve
-      calc(var(--motion-reveal) * var(--hero-sequence-scale)) var(--ease-out)
-      calc(var(--hero-interface) * var(--hero-sequence-scale)) backwards;
+    animation: hero-statement-resolve calc(0.39s * var(--hero-sequence-scale))
+      var(--ease-out) calc(var(--hero-interface) * var(--hero-sequence-scale))
+      backwards;
   }
-
   .hero .hero-load-infrastructure {
     animation-delay: calc(
       var(--hero-infrastructure) * var(--hero-sequence-scale)
     );
   }
-
+  .hero .hero-node-interface,
+  .hero .hero-label-interface {
+    animation: hero-node-activate
+      calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
+      calc(var(--hero-interface) * var(--hero-sequence-scale));
+  }
+  .hero .hero-signal-echo {
+    animation: hero-signal-travel
+      calc(var(--hero-echo-travel) * var(--hero-sequence-scale)) linear
+      calc(var(--hero-infrastructure) * var(--hero-sequence-scale));
+  }
+  .hero .hero-node-data,
+  .hero .hero-label-data {
+    animation: hero-node-activate calc(0.13s * var(--hero-sequence-scale))
+      var(--ease-out) calc(var(--hero-completion) * var(--hero-sequence-scale));
+  }
   .hero .hero-load-support {
     animation: hero-support-resolve
       calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
       calc(var(--hero-support) * var(--hero-sequence-scale)) backwards;
   }
-
-  .hero .hero-load-actions,
   .hero .hero-load-secondary {
     animation: hero-controls-resolve
       calc(var(--motion-standard) * var(--hero-sequence-scale)) var(--ease-out)
       calc(var(--hero-support) * var(--hero-sequence-scale)) backwards;
   }
-
-  .hero .hero-actions:focus-within {
-    animation: none;
-  }
 }
 
-@keyframes hero-architecture-environment {
-  0% {
-    opacity: 0.18;
-  }
-  18% {
-    opacity: 0.8;
-  }
-  45%,
-  100% {
+@keyframes hero-system-clock {
+  from,
+  to {
     opacity: 1;
+    visibility: visible;
   }
 }
-
-@keyframes hero-path-assemble {
+@keyframes hero-discover {
   from {
-    stroke-dashoffset: 1;
+    clip-path: inset(0 100% 0 0);
   }
   to {
-    stroke-dashoffset: 0;
+    clip-path: inset(0);
   }
 }
-
-@keyframes hero-signal-travel {
+@keyframes hero-scan-pass {
   0% {
-    stroke-dashoffset: 0.042;
     opacity: 0;
+    transform: translateX(0);
   }
-  5% {
+  8%,
+  90% {
     opacity: 1;
   }
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+@keyframes hero-system-converge {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(var(--hero-junction-x, 83.333%) - 50%),
+        calc(var(--hero-junction-y, 20%) - 50%)
+      )
+      scale(var(--hero-collapse-scale));
+  }
+}
+@keyframes hero-route-retract {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dasharray: 0.18 1;
+    stroke-dashoffset: -0.8;
+  }
+}
+@keyframes hero-signal-travel {
+  0% {
+    stroke-dashoffset: 0.035;
+    opacity: 0;
+  }
+  5%,
   95% {
     opacity: 1;
   }
@@ -367,93 +512,109 @@
     opacity: 0;
   }
 }
-
 @keyframes hero-node-activate {
+  0%,
+  100% {
+    color: inherit;
+  }
+  35% {
+    color: var(--accent);
+    stroke: var(--accent);
+    fill: var(--accent);
+  }
+}
+@keyframes hero-junction-activate {
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+@keyframes hero-node-outline-activate {
+  35% {
+    stroke: var(--accent);
+  }
+}
+@keyframes hero-discovery-caption {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes hero-grid-resolve {
+  0%,
+  55% {
+    opacity: 0.08;
+  }
+  90%,
+  100% {
+    opacity: 0.72;
+  }
+}
+@keyframes hero-resting-resolve {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes hero-lanes-transfer {
   0% {
     opacity: 0;
-    transform: scale(0.7);
-    fill: var(--background);
   }
-  25% {
-    opacity: 1;
-    transform: scale(1.3);
-    fill: var(--accent);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-    fill: var(--background);
-  }
-}
-
-@keyframes hero-node-echo {
-  0%,
-  100% {
-    fill: var(--background);
-  }
-  45% {
-    fill: var(--accent);
-  }
-}
-
-@keyframes hero-label-echo {
-  0%,
-  100% {
-    color: var(--text-subtle);
-  }
-  25% {
-    color: var(--accent);
-  }
-}
-
-@keyframes hero-mark-resolve {
-  from {
-    opacity: 0.12;
-  }
-  to {
+  15%,
+  44% {
     opacity: 1;
   }
-}
-
-@keyframes hero-name-resolve {
-  from {
+  100% {
     opacity: 0;
-    translate: 0 var(--hero-name-distance);
-  }
-  15% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
   }
 }
-
+@keyframes hero-name-resolve {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transform: translateY(14px) scale(0.96);
+  }
+  20% {
+    opacity: 1;
+  }
+  78% {
+    clip-path: inset(-12% -2% -12% -2%);
+    transform: translateY(-1px) scale(1.008);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(-12% -2% -12% -2%);
+    transform: none;
+  }
+}
 @keyframes hero-statement-resolve {
   from {
     opacity: 0;
+    clip-path: inset(0 0 100%);
     translate: 0 var(--hero-statement-distance);
-  }
-  15% {
-    opacity: 1;
   }
   to {
     opacity: 1;
-    translate: 0 0;
+    clip-path: inset(-12% -2% -12% -2%);
+    translate: none;
   }
 }
-
 @keyframes hero-support-resolve {
   from {
     opacity: 0;
-    translate: 0 6px;
+    translate: 0 5px;
   }
   to {
     opacity: 1;
-    translate: 0 0;
+    translate: none;
   }
 }
-
 @keyframes hero-controls-resolve {
   from {
     opacity: 0.7;
@@ -463,13 +624,29 @@
   }
 }
 
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  .hero-boot-stage {
+    height: clamp(19rem, 36dvh, 24rem);
+  }
+  .hero-boot-branches {
+    opacity: 0.55;
+  }
+  .hero-coordinate-lines {
+    opacity: 0.55;
+  }
+  .hero-discovery-label {
+    font-size: 0.6rem;
+  }
+  .hero-system-labels {
+    font-size: 0.46rem;
+  }
+}
 @media (max-width: 47.99rem) {
   .hero {
-    --hero-sequence-scale: 0.65;
-    --hero-name-distance: 65%;
-    --hero-statement-distance: 35%;
+    --hero-sequence-scale: var(--hero-compact-scale);
+    --hero-collapse-scale: 0.32;
+    --hero-statement-distance: 18%;
   }
-
   .hero-system {
     row-gap: 1.35rem;
   }
@@ -485,7 +662,28 @@
     margin: 0;
     transform: none;
   }
-
+  .hero-boot-stage {
+    top: 3.25rem;
+    height: clamp(17rem, 39dvh, 22rem);
+  }
+  .hero-diagram-wide {
+    display: none;
+  }
+  .hero-diagram-compact {
+    display: block;
+  }
+  .hero-discovery-label {
+    font-size: 0.61rem;
+    gap: 0.3rem;
+    translate: -24% -100%;
+  }
+  .hero-discovery-label > span {
+    font-size: 0.43rem;
+  }
+  .hero-system-origin,
+  .hero-junction-label {
+    font-size: 0.44rem;
+  }
   .hero-path-plane {
     position: relative;
     inset: auto;
@@ -494,15 +692,16 @@
     align-self: stretch;
     height: 100%;
   }
-  .hero-branch-services,
-  .hero-label-services {
+  .hero-label-services,
+  .hero-label-processing,
+  .hero-label-data {
     display: none;
   }
   .hero-label-interface {
     left: 0;
     font-size: 0.48rem;
   }
-  .hero-label-data {
+  .hero-label-identity {
     font-size: 0.48rem;
     bottom: -1.1rem;
   }
@@ -517,14 +716,23 @@
     transform: none;
   }
 }
-
 @media (orientation: landscape) and (max-height: 30rem) {
   .hero {
-    --hero-sequence-scale: 0.65;
-    --hero-name-distance: 65%;
-    --hero-statement-distance: 35%;
+    --hero-sequence-scale: var(--hero-compact-scale);
+    --hero-statement-distance: 18%;
     padding-top: calc(var(--header-height) + 1.25rem);
     padding-bottom: 1.5rem;
+  }
+  .hero-boot-stage {
+    top: 1.5rem;
+    height: 14rem;
+  }
+  .hero-boot-branches,
+  .hero-coordinate-lines {
+    opacity: 0.45;
+  }
+  .hero-discovery-label {
+    font-size: 0.6rem;
   }
   .hero .hero-mark {
     height: 5rem;
@@ -559,7 +767,6 @@
     margin-top: 1rem;
   }
 }
-
 @media (prefers-reduced-motion: reduce), (scripting: none) {
   .hero *,
   .hero *::before,
@@ -567,16 +774,22 @@
     animation: none !important;
     translate: none !important;
   }
+  .hero .hero-boot-stage {
+    display: none;
+  }
   .hero .hero-path-plane,
   .hero .hero-grid-lines,
   .hero .hero-mark,
   .hero .hero-title,
+  .hero .hero-load-title,
   .hero .hero-intro,
   .hero .hero-foot {
     transform: none !important;
     opacity: 1 !important;
+    clip-path: none !important;
   }
-  .hero .hero-signal {
+  .hero .hero-signal,
+  .hero .hero-construction-lanes {
     display: none;
   }
 }

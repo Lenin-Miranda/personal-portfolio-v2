@@ -1,7 +1,11 @@
 "use client";
 
 import { type ReactNode, useEffect, useRef } from "react";
-import { HERO_CLOCK_ANIMATION, heroSequenceStyle } from "./heroSequence";
+import {
+  HERO_CLOCK_ANIMATION,
+  heroSequenceStyle,
+  readHeroSequenceTime,
+} from "./heroSequence";
 
 /** A static stage: only native scroll can gently recede the initialized system. */
 export default function HeroInteraction({ children }: { children: ReactNode }) {
@@ -39,6 +43,20 @@ export default function HeroInteraction({ children }: { children: ReactNode }) {
     const measure = () => {
       documentTop = hero.getBoundingClientRect().top + window.scrollY;
       viewportHeight = Math.max(window.innerHeight, 1);
+      const stage = hero.querySelector<HTMLElement>(".hero-boot-stage");
+      const mark = hero.querySelector<HTMLElement>(".hero-mark");
+      if (stage && mark && hero.dataset.initialized !== "true") {
+        const stageBounds = stage.getBoundingClientRect();
+        const markBounds = mark.getBoundingClientRect();
+        stage.style.setProperty(
+          "--hero-junction-x",
+          `${markBounds.left + markBounds.width / 2 - stageBounds.left}px`,
+        );
+        stage.style.setProperty(
+          "--hero-junction-y",
+          `${markBounds.top + markBounds.height / 2 - stageBounds.top}px`,
+        );
+      }
       schedule();
     };
     const updateCapability = () => {
@@ -49,7 +67,8 @@ export default function HeroInteraction({ children }: { children: ReactNode }) {
         window.addEventListener("scroll", schedule, { passive: true });
         schedule();
       }
-      if (reducedQuery.matches) hero.dataset.initialized = "true";
+      if (reducedQuery.matches || readHeroSequenceTime(hero) === null)
+        hero.dataset.initialized = "true";
     };
     const completeSequence = (event: AnimationEvent) => {
       if (event.animationName === HERO_CLOCK_ANIMATION)
@@ -71,6 +90,7 @@ export default function HeroInteraction({ children }: { children: ReactNode }) {
     window.addEventListener("resize", measure, { passive: true });
     document.addEventListener("visibilitychange", schedule);
     hero.addEventListener("animationend", completeSequence);
+    measure();
     updateCapability();
 
     return () => {

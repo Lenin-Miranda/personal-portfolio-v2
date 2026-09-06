@@ -1,40 +1,42 @@
 import type { CSSProperties } from "react";
-import { duration } from "./motion/tokens";
 
-// One finite title sequence. The first signal reaches LM before the identity
-// reveal; the continuation reaches Data as “infrastructure” resolves.
-const signalStart = 0.14;
-const signalTravel = 0.62;
+// A single clock connects discovery, convergence, particles, and typography.
 export const heroSequence = {
-  architecture: 0.04,
-  signalStart,
-  signalTravel,
-  interfaceNode: signalStart + signalTravel * (240 / 920),
-  servicesNode: signalStart + signalTravel * (600 / 920),
-  logo: signalStart + signalTravel,
-  name: 0.86,
-  interface: 1.08,
-  infrastructure: 1.25,
-  dataStart: 1.08,
-  dataTravel: duration.standard,
-  support: 1.35,
-  finish: 1.85,
+  scan: 0.08,
+  scanTravel: 0.48,
+  signalStart: 0.58,
+  signalTravel: 0.7,
+  collapse: 1.28,
+  collapseTravel: 0.52,
+  logo: 1.45,
+  resting: 1.7,
+  name: 1.58,
+  nameTravel: 0.64,
+  interface: 1.91,
+  infrastructure: 2.06,
+  echoTravel: 0.31,
+  completion: 2.37,
+  support: 2.14,
+  finish: 2.5,
 } as const;
 
-export const HERO_COMPACT_TIME_SCALE = 0.65;
-export const HERO_CLOCK_ANIMATION = "hero-architecture-environment";
+export const HERO_COMPACT_TIME_SCALE = 0.64;
+export const HERO_CLOCK_ANIMATION = "hero-system-clock";
 
-export const heroSequenceStyle = Object.fromEntries(
-  Object.entries(heroSequence).map(([name, seconds]) => [
-    `--hero-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`,
-    `${seconds}s`,
-  ]),
-) as CSSProperties;
+export const heroSequenceStyle = {
+  ...Object.fromEntries(
+    Object.entries(heroSequence).map(([name, seconds]) => [
+      `--hero-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`,
+      `${seconds}s`,
+    ]),
+  ),
+  "--hero-compact-scale": HERO_COMPACT_TIME_SCALE,
+} as CSSProperties;
 
-/** Read the CSS sequence clock, so slow asset decoding never starts a new intro. */
+/** Slow hydration/asset decoding joins the current sequence, never a new intro. */
 export function readHeroSequenceTime(hero: HTMLElement): number | null {
   const animation = hero
-    .querySelector(".hero-path-plane")
+    .querySelector(".hero-boot-stage")
     ?.getAnimations()
     .find(
       (candidate) =>

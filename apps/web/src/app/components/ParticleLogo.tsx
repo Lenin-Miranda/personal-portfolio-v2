@@ -10,6 +10,7 @@ import {
 
 const LOGO_PATH = "/brand/lenin-miranda-mark.png";
 const SOURCE_SIZE = 512;
+const CONSTRUCTION_LANES = [0.28, 0.5, 0.72] as const;
 
 type LogoPoint = { x: number; y: number };
 type Particle = {
@@ -17,6 +18,7 @@ type Particle = {
   duration: number;
   endX: number;
   endY: number;
+  releaseX: number;
   opacity: number;
   radius: number;
   startX: number;
@@ -106,18 +108,51 @@ function buildParticles(
   const centerX = width / 2;
   const centerY = height / 2;
   const timeScale = compact ? HERO_COMPACT_TIME_SCALE : 1;
+  const grid = compact ? 6 : 8;
+  const frameInset = 3;
   return shuffledPoints.slice(0, compact ? 240 : 420).map((point) => {
     const endX = centerX + point.x * logoSize;
     const endY = centerY + point.y * logoSize;
+    const laneIndex = CONSTRUCTION_LANES.reduce<number>(
+      (nearest, lane, index) =>
+        Math.abs(lane * height - endY) <
+        Math.abs((CONSTRUCTION_LANES[nearest] ?? 0.5) * height - endY)
+          ? index
+          : nearest,
+      0,
+    );
+    const startY = (CONSTRUCTION_LANES[laneIndex] ?? 0.5) * height;
+    const side = point.x < 0 ? -1 : 1;
+    const travel = compact ? 30 + random() * 15 : 36 + random() * 42;
+    const horizontalTravel = Math.sqrt(
+      Math.max(travel * travel - (startY - endY) ** 2, 0),
+    );
+    const startX = Math.min(
+      Math.max(
+        Math.round((endX + side * horizontalTravel) / grid) * grid,
+        frameInset,
+      ),
+      width - frameInset,
+    );
+    const distanceFromCenter =
+      Math.abs(startX - centerX) / Math.max(centerX, 1);
     return {
-      delay: ((point.x + 0.5) * stagger.tight + random() * 0.025) * timeScale,
-      duration: (duration.standard + random() * duration.micro) * timeScale,
+      delay:
+        (laneIndex * stagger.tight * 0.4 +
+          distanceFromCenter * stagger.tight +
+          random() * 0.01) *
+        timeScale,
+      duration:
+        (duration.standard + duration.fast + random() * 0.035) * timeScale,
       endX,
       endY,
+      // The cubic initially follows its construction row, then turns into the
+      // glyph. The row is shared with the SVG fragments collapsing into LM.
+      releaseX: startX + (endX - startX) * 0.7,
       opacity: 0.72 + random() * 0.28,
       radius: (compact ? 0.95 : 1.1) + random() * 0.5,
-      startX: centerX + (Math.round(point.x * 12) / 12) * logoSize,
-      startY: endY + (point.y < 0 ? -1 : 1) * (compact ? 8 : 16),
+      startX,
+      startY,
     };
   });
 }
@@ -142,6 +177,7 @@ export default function ParticleLogo() {
     let wakeTimer = 0;
     let disposed = false;
     let visible = false;
+    let settled = reducedQuery.matches;
     let width = 0;
     let height = 0;
     let pixelRatio = 1;
@@ -159,21 +195,23 @@ export default function ParticleLogo() {
         );
         if (progress < 1) complete = false;
         if (progress <= 0) continue;
-        const eased = 1 - Math.pow(1 - progress, 4);
-        context.globalAlpha = particle.opacity * Math.min(progress * 4, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const remaining = 1 - eased;
+        const x =
+          remaining ** 3 * particle.startX +
+          3 * remaining ** 2 * eased * particle.releaseX +
+          (3 * remaining * eased ** 2 + eased ** 3) * particle.endX;
+        const y =
+          particle.startY + (particle.endY - particle.startY) * eased ** 3;
+        context.globalAlpha = particle.opacity * Math.min(progress * 7, 1);
         context.beginPath();
-        context.arc(
-          particle.startX + (particle.endX - particle.startX) * eased,
-          particle.startY + (particle.endY - particle.startY) * eased,
-          particle.radius,
-          0,
-          Math.PI * 2,
-        );
+        context.arc(x, y, particle.radius, 0, Math.PI * 2);
         context.fill();
       }
       context.globalAlpha = 1;
       parent.dataset.ready = "true";
       parent.dataset.settled = String(complete);
+      if (complete) settled = true;
       return complete;
     };
 
@@ -188,7 +226,7 @@ export default function ParticleLogo() {
       wakeTimer = 0;
       if (disposed || !visible || document.hidden || !particles.length) return;
       const time = readHeroSequenceTime(hero);
-      if (reducedQuery.matches || time === null) {
+      if (settled || reducedQuery.matches || time === null) {
         draw(Number.POSITIVE_INFINITY);
         return;
       }
@@ -229,6 +267,7 @@ export default function ParticleLogo() {
     };
     const capabilityChanged = () => {
       stop();
+      if (reducedQuery.matches) settled = true;
       updateLayout(true);
       schedule();
     };

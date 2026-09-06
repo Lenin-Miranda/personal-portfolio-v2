@@ -1,4 +1,4 @@
-# Project navigation tests
+# Browser behavior tests
 
 Install the test browser once after installing workspace dependencies:
 
@@ -20,8 +20,14 @@ Playwright builds the production app and starts a separate server on `127.0.0.1:
 - Navigation with reduced motion or without the View Transitions API.
 - Image decoding that never completes.
 - Slow case-study responses that outlast the visual transition.
+- Hero completion, readable final text, stopped CSS/canvas animation, and first-load layout stability.
+- Reduced-motion and no-JavaScript Hero fallbacks.
+- Hero overflow at narrow phone, tablet, and short landscape sizes.
+- Keyboard navigation while the Hero introduction is still in progress.
 
 Assertions wait for observable navigation outcomes. They do not depend on a fixed animation duration. Both profiles also fail on browser console or runtime errors. The phone profile emulates touch and viewport behavior in Chromium; it does not replace a device or Safari visual review.
+
+Hero tests observe browser layout-shift entries and canvas paint activity. The intro-interaction test pauses CSS animation to keep its input check independent of machine speed. Visual composition and choreography still require watching the sequence.
 
 To run one profile:
 

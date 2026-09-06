@@ -1,4 +1,5 @@
 import { SITE } from "../data/portfolio";
+import HeroArchitecture from "./HeroArchitecture";
 import HeroInteraction from "./HeroInteraction";
 import { ArrowDown, ArrowUpRight } from "./Icons";
 import MagneticLink from "./MagneticLink";
@@ -12,50 +13,7 @@ export default function Hero() {
 
       <div className="hero-inner">
         <div className="hero-system">
-          <div aria-hidden="true" className="hero-path-plane">
-            <svg
-              className="hero-architecture"
-              viewBox="0 0 800 240"
-              preserveAspectRatio="none"
-            >
-              <path
-                className="hero-path-foundation"
-                d="M0 148H240V88H480V148H800"
-                pathLength="1"
-              />
-              <path
-                className="hero-path-branch hero-branch-interface"
-                d="M240 148V208H80"
-                pathLength="1"
-              />
-              <path
-                className="hero-path-branch hero-branch-services"
-                d="M480 148V208H660"
-                pathLength="1"
-              />
-              <path
-                className="hero-signal hero-signal-primary"
-                d="M0 148H240V88H480V148H800"
-                pathLength="1"
-              />
-              <circle
-                className="hero-node hero-node-interface"
-                cx="240"
-                cy="148"
-                r="4"
-              />
-              <circle
-                className="hero-node hero-node-services"
-                cx="480"
-                cy="148"
-                r="4"
-              />
-            </svg>
-            <div className="hero-system-labels">
-              <span className="hero-label-interface">01 / Interface</span>
-              <span className="hero-label-services">02 / Services</span>
-            </div>
-          </div>
+          <HeroArchitecture />
 
           <div className="hero-kicker">
             <p>{SITE.role}</p>
@@ -69,35 +27,21 @@ export default function Hero() {
               viewBox="0 0 400 240"
               preserveAspectRatio="none"
             >
-              <path
-                className="hero-data-path"
-                d="M0 148V220H360V190H400"
-                pathLength="1"
-              />
-              <path
-                className="hero-signal hero-signal-data"
-                d="M0 148V220H360V190H400"
-                pathLength="1"
-              />
-              <circle
-                className="hero-node hero-node-identity"
-                cx="0"
-                cy="148"
-                r="4"
-              />
-              <circle
-                className="hero-node hero-node-data"
-                cx="400"
-                cy="190"
-                r="4"
-              />
+              <path className="hero-mark-connection" d="M0 148H36V120H65" />
+              <g className="hero-construction-lanes">
+                <path d="M0 67.2H400M0 120H400M0 172.8H400" />
+                <path
+                  className="hero-lane-ticks"
+                  d="M40 63.2v8M360 63.2v8M40 116v8M360 116v8M40 168.8v8M360 168.8v8"
+                />
+              </g>
             </svg>
             <ParticleLogo />
             <span aria-hidden="true" className="hero-mark-index">
               LM / 26
             </span>
-            <span aria-hidden="true" className="hero-label-data">
-              03 / Data
+            <span aria-hidden="true" className="hero-label-identity">
+              LM / Identity
             </span>
           </div>
         </div>
