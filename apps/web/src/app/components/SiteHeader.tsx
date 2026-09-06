@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { NAV_ITEMS, SITE } from "../data/portfolio";
 import { CloseIcon, MenuIcon } from "./Icons";
+import { distance, duration, ease, stagger } from "./motion/tokens";
+import { useMotionCapabilities } from "./motion/useMotionCapabilities";
+import "./navigation-contact-motion.css";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -15,11 +18,71 @@ const FOCUSABLE_SELECTOR =
 export default function SiteHeader() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
+  const headerRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const reduceMotion = useReducedMotion();
+  const { reduced: reduceMotion } = useMotionCapabilities();
   const isHome = pathname === "/";
   const sectionHref = (href: string) => (isHome ? href : `/${href}`);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    let frame = 0;
+    let previousY = Math.max(0, window.scrollY);
+    let directionAnchor = previousY;
+    let direction = "up";
+
+    const update = () => {
+      frame = 0;
+      const y = Math.max(0, window.scrollY);
+      const delta = y - previousY;
+      const nextDirection = delta > 0 ? "down" : delta < 0 ? "up" : direction;
+
+      if (nextDirection !== direction) {
+        directionAnchor = previousY;
+        direction = nextDirection;
+      }
+
+      header.dataset.scrolled = String(y > 48);
+      if (Math.abs(y - directionAnchor) > 12 || y < 48) {
+        header.dataset.direction = y < 48 ? "up" : direction;
+      }
+      previousY = y;
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isHome) return;
+
+    const sections = ["#top", ...NAV_ITEMS.map((item) => item.href)]
+      .map((href) => document.querySelector<HTMLElement>(href))
+      .filter((section): section is HTMLElement => section !== null);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(`#${entry.target.id}`);
+          }
+        }
+      },
+      { rootMargin: "-24% 0px -75% 0px", threshold: 0 },
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [isHome]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -78,7 +141,9 @@ export default function SiteHeader() {
         }
       });
       window.removeEventListener("keydown", handleKeyDown);
-      window.requestAnimationFrame(() => trigger?.focus());
+      window.requestAnimationFrame(() =>
+        trigger?.focus({ preventScroll: true }),
+      );
     };
   }, [isOpen]);
 
@@ -88,7 +153,7 @@ export default function SiteHeader() {
         Skip to content
       </a>
 
-      <header className="site-header">
+      <header className="site-header" ref={headerRef}>
         <Link
           aria-label="Lenin Miranda, home"
           className="brand-link"
@@ -109,7 +174,16 @@ export default function SiteHeader() {
           <ul>
             {NAV_ITEMS.map((item) => (
               <li key={item.href}>
-                <Link href={sectionHref(item.href)}>{item.label}</Link>
+                <Link
+                  aria-current={
+                    isHome && activeSection === item.href
+                      ? "location"
+                      : undefined
+                  }
+                  href={sectionHref(item.href)}
+                >
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
@@ -151,7 +225,10 @@ export default function SiteHeader() {
             initial={reduceMotion ? false : { opacity: 0 }}
             ref={menuRef}
             role="dialog"
-            transition={{ duration: reduceMotion ? 0 : 0.22 }}
+            transition={{
+              duration: reduceMotion ? 0 : duration.standard,
+              ease: ease.out,
+            }}
           >
             <div className="mobile-menu-topline">
               <span>{SITE.name}</span>
@@ -171,16 +248,23 @@ export default function SiteHeader() {
                 {NAV_ITEMS.map((item, index) => (
                   <motion.li
                     animate={{ opacity: 1, y: 0 }}
-                    initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+                    initial={
+                      reduceMotion ? false : { opacity: 0, y: distance.small }
+                    }
                     key={item.href}
                     transition={{
-                      delay: reduceMotion ? 0 : 0.04 + index * 0.045,
-                      duration: reduceMotion ? 0 : 0.36,
-                      ease: [0.16, 1, 0.3, 1],
+                      delay: reduceMotion ? 0 : index * stagger.tight,
+                      duration: reduceMotion ? 0 : duration.standard,
+                      ease: ease.out,
                     }}
                   >
                     <span aria-hidden="true">0{index + 1}</span>
                     <Link
+                      aria-current={
+                        isHome && activeSection === item.href
+                          ? "location"
+                          : undefined
+                      }
                       href={sectionHref(item.href)}
                       onClick={() => setIsOpen(false)}
                     >

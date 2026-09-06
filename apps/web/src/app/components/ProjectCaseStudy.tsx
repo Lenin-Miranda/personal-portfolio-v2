@@ -7,6 +7,7 @@ import ProjectCaseStudyHero, {
 } from "./ProjectCaseStudyHero";
 import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
 import SiteHeader from "./SiteHeader";
+import { stagger } from "./motion/tokens";
 
 type ProjectCaseStudyProps = {
   nextProject: FeaturedProject;
@@ -42,19 +43,22 @@ export default function ProjectCaseStudy({
     <div className="site-shell project-case-shell">
       <SiteHeader />
       <main className="project-case-main" id="main-content">
-        <ProjectCaseStudyHero project={heroProject} />
+        <ProjectCaseStudyHero key={project.id} project={heroProject} />
 
         <article className="project-case-story">
           <div className="project-case-inner">
             <RevealGroup
               amount={0.28}
               className="project-story-intro"
-              stagger={0.09}
+              stagger={stagger.content}
             >
               <RevealItem className="eyebrow" level="meta">
                 <p>Engineering narrative</p>
               </RevealItem>
-              <MaskedReveal className="project-story-intro-title">
+              <MaskedReveal
+                className="project-story-intro-title"
+                pattern="line"
+              >
                 <h2>From product intent to dependable behavior.</h2>
               </MaskedReveal>
             </RevealGroup>
@@ -65,7 +69,7 @@ export default function ProjectCaseStudy({
                   amount={0.28}
                   className="project-story-section"
                   key={section.field}
-                  stagger={0.09}
+                  stagger={stagger.content}
                 >
                   <RevealItem className="project-story-number" level="meta">
                     <p>{section.number}</p>
@@ -83,7 +87,7 @@ export default function ProjectCaseStudy({
             <RevealGroup
               amount={0.3}
               className="project-case-explore"
-              stagger={0.09}
+              stagger={stagger.content}
             >
               <RevealItem className="project-story-number" level="meta">
                 <p>05</p>
@@ -120,7 +124,7 @@ export default function ProjectCaseStudy({
             <RevealGroup
               amount={0.3}
               className="project-case-next-inner"
-              stagger={0.08}
+              stagger={stagger.tight}
             >
               <RevealItem level="meta">
                 <p>Next project</p>

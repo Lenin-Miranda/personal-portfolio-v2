@@ -1,5 +1,6 @@
 import { EXPERIENCE } from "../data/portfolio";
 import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
+import "./narrative-motion.css";
 
 export default function ExperienceSection() {
   return (
@@ -26,7 +27,14 @@ export default function ExperienceSection() {
 
         <ol className="experience-list">
           {EXPERIENCE.map((experience) => (
-            <li key={`${experience.company}-${experience.dates}`}>
+            <li
+              data-experience-entry
+              key={`${experience.company}-${experience.dates}`}
+            >
+              <span aria-hidden="true" className="experience-timeline">
+                <span className="experience-timeline-fill" />
+                <span className="experience-timeline-node" />
+              </span>
               <RevealGroup
                 amount={0.23}
                 className="experience-entry"
@@ -37,12 +45,18 @@ export default function ExperienceSection() {
                   <p>{experience.location}</p>
                 </RevealItem>
 
-                <RevealItem className="experience-position">
-                  <p>{experience.company}</p>
-                  <h3>{experience.role}</h3>
-                  <p className="experience-summary">{experience.summary}</p>
-                  <p className="experience-proof">{experience.proof}</p>
-                </RevealItem>
+                <div className="experience-position">
+                  <RevealItem className="experience-company" level="meta">
+                    <p>{experience.company}</p>
+                  </RevealItem>
+                  <MaskedReveal>
+                    <h3>{experience.role}</h3>
+                  </MaskedReveal>
+                  <RevealItem>
+                    <p className="experience-summary">{experience.summary}</p>
+                    <p className="experience-proof">{experience.proof}</p>
+                  </RevealItem>
+                </div>
 
                 <RevealItem className="experience-detail">
                   <ul>

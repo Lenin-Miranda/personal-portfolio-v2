@@ -1,15 +1,19 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, type Variants } from "motion/react";
 import {
   type FormEvent,
   type KeyboardEvent,
+  useCallback,
   useEffect,
   useRef,
   useState,
 } from "react";
 
 import { ArrowRight, ArrowUpRight } from "./Icons";
+import { distance, duration, ease } from "./motion/tokens";
+import { useMotionCapabilities } from "./motion/useMotionCapabilities";
+import "./navigation-contact-motion.css";
 
 const INTENT_OPTIONS = [
   { label: "A full-time opportunity", value: "full-time" },
@@ -42,6 +46,15 @@ const INITIAL_VALUES: ContactValues = {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const STEP_VARIANTS: Variants = {
+  enter: { opacity: 1, x: 0 },
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction * distance.small,
+  }),
+  exit: (direction: number) => ({ opacity: 0, x: direction * -distance.small }),
+};
+
 function validateField(field: FieldName, value: string) {
   const normalizedValue = value.trim();
 
@@ -73,8 +86,9 @@ type ContactFormProps = {
 };
 
 export default function ContactForm({ fallbackEmail }: ContactFormProps) {
-  const reduceMotion = useReducedMotion();
+  const { reduced: reduceMotion } = useMotionCapabilities();
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
   const [values, setValues] = useState<ContactValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({});
   const [submissionState, setSubmissionState] =
@@ -83,26 +97,22 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const shouldMoveFocusRef = useRef(false);
   const startedAtRef = useRef(0);
+  const sendingRef = useRef(false);
 
   useEffect(() => {
     startedAtRef.current = Date.now();
   }, []);
 
-  useEffect(() => {
-    if (!shouldMoveFocusRef.current) return;
-
-    const timeout = window.setTimeout(
-      () => {
-        stageRef.current
-          ?.querySelector<HTMLElement>("[data-step-focus]")
-          ?.focus({ preventScroll: true });
-        shouldMoveFocusRef.current = false;
-      },
-      reduceMotion ? 0 : 300,
-    );
-
-    return () => window.clearTimeout(timeout);
-  }, [reduceMotion, step, submissionState]);
+  // The next stage mounts after AnimatePresence finishes the previous exit.
+  // Focus follows that actual handoff, including instant reduced-motion changes.
+  const focusNewStep = useCallback((element: HTMLDivElement | null) => {
+    if (!element || !shouldMoveFocusRef.current) return;
+    const target = element.querySelector<HTMLElement>("[data-step-focus]");
+    if (target) {
+      target.focus({ preventScroll: true });
+      shouldMoveFocusRef.current = false;
+    }
+  }, []);
 
   function updateValue(field: keyof ContactValues, value: string) {
     setValues((currentValues) => ({ ...currentValues, [field]: value }));
@@ -119,6 +129,7 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
 
   function moveToStep(nextStep: number) {
     shouldMoveFocusRef.current = true;
+    setDirection(nextStep > step ? 1 : -1);
     setStep(nextStep);
   }
 
@@ -148,7 +159,7 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >,
   ) {
-    if (event.key !== "Enter") return;
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
 
     const isTextarea = event.currentTarget instanceof HTMLTextAreaElement;
     const shouldAdvanceTextarea =
@@ -168,8 +179,9 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
       return;
     }
 
-    if (submissionState === "sending") return;
+    if (sendingRef.current) return;
 
+    sendingRef.current = true;
     setSubmissionState("sending");
     setSubmissionMessage("");
 
@@ -193,6 +205,7 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
       }
 
       shouldMoveFocusRef.current = true;
+      setDirection(1);
       setSubmissionState("success");
     } catch (error) {
       setSubmissionMessage(
@@ -201,6 +214,8 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
           : "The message could not be sent. Please try again.",
       );
       setSubmissionState("error");
+    } finally {
+      sendingRef.current = false;
     }
   }
 
@@ -221,6 +236,7 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
     <form
       aria-label="Contact Lenin Miranda"
       className="contact-form"
+      data-state={submissionState}
       noValidate
       onSubmit={handleSubmit}
     >
@@ -232,7 +248,11 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
         <ol aria-label="Contact form progress">
           {FIELD_STEPS.map((label, index) => (
             <li
-              aria-current={index === step ? "step" : undefined}
+              aria-current={
+                index === step && submissionState !== "success"
+                  ? "step"
+                  : undefined
+              }
               className={index <= step ? "is-active" : undefined}
               key={label}
             >
@@ -246,17 +266,42 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
       </div>
 
       <div className="contact-form-stage" ref={stageRef}>
-        <AnimatePresence initial={false} mode="wait">
+        <AnimatePresence custom={direction} initial={false} mode="wait">
           {submissionState === "success" ? (
             <motion.div
-              animate={{ opacity: 1, x: 0 }}
+              animate="enter"
               className="contact-success"
-              exit={reduceMotion ? undefined : { opacity: 0, x: -18 }}
-              initial={reduceMotion ? false : { opacity: 0, x: 18 }}
+              custom={direction}
+              exit={reduceMotion ? undefined : "exit"}
+              initial={reduceMotion ? false : "initial"}
               key="success"
-              transition={{ duration: reduceMotion ? 0 : 0.24 }}
+              ref={focusNewStep}
+              transition={{
+                duration: reduceMotion ? 0 : duration.standard,
+                ease: ease.out,
+              }}
+              variants={STEP_VARIANTS}
             >
-              <p className="contact-step-kicker">Message accepted</p>
+              <p className="contact-step-kicker contact-success-kicker">
+                <svg
+                  aria-hidden="true"
+                  className="contact-success-mark"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <motion.path
+                    animate={{ pathLength: 1 }}
+                    d="m7.5 12 3 3 6-6"
+                    initial={reduceMotion ? false : { pathLength: 0 }}
+                    transition={{
+                      duration: reduceMotion ? 0 : duration.standard,
+                      ease: ease.out,
+                    }}
+                  />
+                </svg>
+                Message accepted
+              </p>
               <h3 data-step-focus tabIndex={-1}>
                 Thanks, {values.name}.
               </h3>
@@ -275,12 +320,18 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
             </motion.div>
           ) : (
             <motion.div
-              animate={{ opacity: 1, x: 0 }}
+              animate="enter"
               className="contact-step"
-              exit={reduceMotion ? undefined : { opacity: 0, x: -18 }}
-              initial={reduceMotion ? false : { opacity: 0, x: 18 }}
+              custom={direction}
+              exit={reduceMotion ? undefined : "exit"}
+              initial={reduceMotion ? false : "initial"}
               key={step}
-              transition={{ duration: reduceMotion ? 0 : 0.24 }}
+              ref={focusNewStep}
+              transition={{
+                duration: reduceMotion ? 0 : duration.fast,
+                ease: ease.out,
+              }}
+              variants={STEP_VARIANTS}
             >
               {step === 0 ? (
                 <>
@@ -485,12 +536,24 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
         />
       </label>
 
-      {submissionState === "error" ? (
-        <p className="contact-submit-error" role="alert">
-          {submissionMessage}{" "}
-          <a href={`mailto:${fallbackEmail}`}>Email me directly instead.</a>
-        </p>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {submissionState === "error" ? (
+          <motion.p
+            animate={{ opacity: 1, y: 0 }}
+            className="contact-submit-error"
+            exit={{ opacity: 0 }}
+            initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+            role="alert"
+            transition={{
+              duration: reduceMotion ? 0 : duration.fast,
+              ease: ease.out,
+            }}
+          >
+            {submissionMessage}{" "}
+            <a href={`mailto:${fallbackEmail}`}>Email me directly instead.</a>
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
 
       {submissionState !== "success" ? (
         <div className="contact-form-actions">
@@ -512,15 +575,25 @@ export default function ContactForm({ fallbackEmail }: ContactFormProps) {
             disabled={submissionState === "sending"}
             type="submit"
           >
-            {submissionState === "sending"
-              ? "Sending…"
-              : step === REVIEW_STEP
-                ? "Send message"
-                : "Next"}
-            <ArrowRight />
+            <span className="contact-next-label">
+              {submissionState === "sending"
+                ? "Sending…"
+                : step === REVIEW_STEP
+                  ? "Send message"
+                  : "Next"}
+            </span>
+            {submissionState === "sending" ? (
+              <span aria-hidden="true" className="contact-sending-mark" />
+            ) : (
+              <ArrowRight />
+            )}
           </button>
         </div>
       ) : null}
+
+      <span aria-live="polite" className="sr-only" role="status">
+        {submissionState === "sending" ? "Sending your message." : ""}
+      </span>
 
       <p className="contact-form-privacy">
         Sent securely from this site. Prefer your own email client?{" "}

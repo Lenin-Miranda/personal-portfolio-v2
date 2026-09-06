@@ -1,0 +1,260 @@
+/* Fixed geometry, compact visual surface: scrolling never shifts page layout. */
+.site-header[data-scrolled] {
+  --header-surface-scale: 1;
+  --header-content-shift: 0px;
+
+  isolation: isolate;
+  border-bottom-color: transparent;
+  background: transparent;
+}
+
+.site-header::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-bottom: 1px solid var(--border);
+  background: rgb(17 17 15 / 94%);
+  content: "";
+  transform: scaleY(var(--header-surface-scale, 1));
+  transform-origin: top;
+  transition:
+    transform var(--motion-standard) var(--ease-out),
+    background-color var(--motion-standard) var(--ease-out),
+    border-color var(--motion-standard) var(--ease-out);
+}
+
+.site-header[data-scrolled="true"] {
+  --header-surface-scale: 0.9;
+  --header-content-shift: -3.5px;
+}
+
+.site-header[data-scrolled] > * {
+  transform: translateY(var(--header-content-shift));
+  transition: transform var(--motion-standard) var(--ease-out);
+}
+
+.site-header[data-scrolled="true"][data-direction="up"]::before,
+.site-header:focus-within::before {
+  border-color: var(--border-strong);
+  background-color: var(--background);
+}
+
+.site-header[data-scrolled="true"][data-direction="up"] .desktop-nav a,
+.site-header:focus-within .desktop-nav a {
+  color: var(--text);
+}
+
+.desktop-nav a[aria-current="location"] {
+  color: var(--text);
+}
+
+.desktop-nav a[aria-current="location"]::after,
+.desktop-nav a:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.mobile-menu a[aria-current="location"] {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+.mobile-menu {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.contact-arrival-line {
+  position: relative;
+  height: 1px;
+  margin-bottom: clamp(2rem, 4vw, 4rem);
+  background: var(--border);
+}
+
+.contact-arrival-line > span {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  clip-path: inset(0 var(--section-handoff-clip, 0%) 0 0);
+}
+
+.contact-form .contact-progress li {
+  position: relative;
+}
+
+.contact-form .contact-progress li::before {
+  position: absolute;
+  inset: -1px 0 auto;
+  height: 1px;
+  background: var(--accent);
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--motion-standard) var(--ease-out);
+}
+
+.contact-form .contact-progress li.is-active {
+  border-color: var(--border);
+}
+
+.contact-form .contact-progress li.is-active::before {
+  transform: scaleX(1);
+}
+
+.contact-progress li[aria-current="step"] {
+  color: var(--text);
+}
+
+.contact-form .contact-form-stage {
+  /* Leave room for a full focus outline inside the animated stage. */
+  overflow: clip;
+  overflow-clip-margin: 5px;
+}
+
+.contact-form .contact-step :is(input, select, textarea) {
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.contact-form .contact-step :is(input, select, textarea):focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
+}
+
+.contact-form
+  .contact-step
+  :is(input, select, textarea)[aria-invalid="true"]:focus-visible {
+  border-color: var(--error);
+  box-shadow: 0 1px 0 var(--error);
+}
+
+.contact-field-error {
+  animation: contact-state-resolve var(--motion-fast) var(--ease-out) both;
+}
+
+.contact-next-label {
+  display: inline-block;
+}
+
+.contact-form .contact-next:disabled {
+  opacity: 1;
+  background: var(--accent-interactive);
+}
+
+.contact-sending-mark {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  border: 1px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: contact-send-turn var(--motion-cinematic) linear infinite;
+}
+
+.contact-success-kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--success);
+}
+
+.contact-success-mark {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.25;
+}
+
+.contact-success-mark circle {
+  opacity: 0.45;
+}
+
+.contact-form[data-state="success"] .contact-progress li::before {
+  background: var(--success);
+}
+
+.contact-back,
+.site-footer a,
+.resume-link {
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+.site-footer a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.3em;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    text-decoration-color var(--motion-fast) var(--ease-out);
+}
+
+.site-footer a:focus-visible {
+  text-decoration: underline;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .contact-back:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .site-footer a:hover {
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .site-header[data-scrolled="true"] {
+    --header-surface-scale: 0.94;
+    --header-content-shift: -2px;
+  }
+
+  .contact-arrival-line {
+    margin-bottom: var(--space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header[data-scrolled] > * {
+    transform: none;
+  }
+
+  .site-header::before {
+    transform: none;
+  }
+
+  .contact-arrival-line > span {
+    clip-path: none;
+  }
+
+  .contact-sending-mark,
+  .contact-field-error {
+    animation: none;
+  }
+}
+
+@keyframes contact-state-resolve {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes contact-send-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}

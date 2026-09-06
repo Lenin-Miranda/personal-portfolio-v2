@@ -36,9 +36,9 @@ export default function ProjectTransitionLink({
       return;
     }
 
-    const source = document.querySelector<HTMLElement>(
-      `[data-project-card-media="${slug}"]`,
-    );
+    const source = event.currentTarget
+      .closest(".project-chapter")
+      ?.querySelector<HTMLElement>("[data-project-card-media]");
 
     if (!source) {
       return;
@@ -54,6 +54,7 @@ export default function ProjectTransitionLink({
       className={className}
       href={`/projects/${slug}`}
       onClick={handleClick}
+      onFocus={() => router.prefetch(`/projects/${slug}`)}
     >
       {children}
     </Link>

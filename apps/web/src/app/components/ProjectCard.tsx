@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight } from "./Icons";
 import ProjectTransitionLink from "./ProjectTransitionLink";
 import ProjectVisual from "./ProjectVisual";
 import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
+import { stagger } from "./motion/tokens";
 
 type ProjectCardProps = {
   project: FeaturedProject;
@@ -22,7 +23,11 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           />
         </div>
 
-        <RevealGroup amount={0.2} className="project-copy" stagger={0.085}>
+        <RevealGroup
+          amount={0.08}
+          className="project-copy"
+          stagger={stagger.tight}
+        >
           <RevealItem className="project-meta" level="meta">
             <span>{project.number} / Featured project</span>
             <div className="project-meta-detail">
@@ -43,22 +48,20 @@ export default function ProjectCard({ project }: ProjectCardProps) {
             <p className="project-positioning">{project.positioning}</p>
           </RevealItem>
 
-          <RevealItem>
-            <dl className="project-notes">
-              <div>
-                <dt>What I built</dt>
-                <dd>{project.build}</dd>
-              </div>
-              <div>
-                <dt>Engineering challenge</dt>
-                <dd>{project.challenge}</dd>
-              </div>
-              <div>
-                <dt>Result</dt>
-                <dd>{project.result}</dd>
-              </div>
-            </dl>
-          </RevealItem>
+          <dl className="project-notes">
+            <RevealItem>
+              <dt>What I built</dt>
+              <dd>{project.build}</dd>
+            </RevealItem>
+            <RevealItem>
+              <dt>Engineering challenge</dt>
+              <dd>{project.challenge}</dd>
+            </RevealItem>
+            <RevealItem>
+              <dt>Result</dt>
+              <dd>{project.result}</dd>
+            </RevealItem>
+          </dl>
 
           <RevealItem level="meta">
             <p className="project-stack">{project.stack.join(" / ")}</p>

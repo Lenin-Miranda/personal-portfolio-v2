@@ -1,7 +1,9 @@
 import { SITE } from "../data/portfolio";
 import HeroInteraction from "./HeroInteraction";
 import { ArrowDown, ArrowUpRight } from "./Icons";
+import MagneticLink from "./MagneticLink";
 import ParticleLogo from "./ParticleLogo";
+import "./hero-motion.css";
 
 export default function Hero() {
   return (
@@ -13,12 +15,14 @@ export default function Hero() {
             preserveAspectRatio="none"
             viewBox="0 0 1440 900"
           >
-            <g>
+            <g className="hero-schematic-paths">
               <path d="M54 178H344V244H548" pathLength="1" />
-              <path d="M886 164H1074V246H1386" pathLength="1" />
+              <path d="M886 164H1004V246H1386" pathLength="1" />
               <path d="M1004 246V340H1226V422H1386" pathLength="1" />
               <path d="M548 710H724V636H930V728H1118" pathLength="1" />
               <path d="M1118 728H1260V652H1386" pathLength="1" />
+            </g>
+            <g className="hero-schematic-nodes">
               <circle cx="344" cy="178" r="4" />
               <circle cx="548" cy="244" r="4" />
               <circle cx="1004" cy="246" r="4" />
@@ -60,11 +64,24 @@ export default function Hero() {
               Lenin Miranda
             </span>
           </span>
-          <span className="hero-title-mask hero-title-statement-mask">
-            <span className="hero-title-line hero-title-statement hero-load-statement">
-              builds from <span className="hero-title-keyword">interface</span>
-              <br />
-              to <span className="hero-title-keyword">infrastructure.</span>
+          <span className="hero-title-statement-mask">
+            <span className="hero-title-line hero-title-statement">
+              <span className="hero-statement-mask">
+                <span className="hero-statement-line hero-load-statement">
+                  builds from{" "}
+                  <span className="hero-title-keyword hero-keyword-interface">
+                    interface
+                  </span>
+                </span>
+              </span>{" "}
+              <span className="hero-statement-mask">
+                <span className="hero-statement-line hero-load-statement hero-load-infrastructure">
+                  to{" "}
+                  <span className="hero-title-keyword hero-keyword-infrastructure">
+                    infrastructure.
+                  </span>
+                </span>
+              </span>
             </span>
           </span>
         </h1>
@@ -77,10 +94,10 @@ export default function Hero() {
           </p>
 
           <div className="hero-actions hero-load-actions">
-            <a className="button button-primary" href="#work">
+            <MagneticLink className="button button-primary" href="#work">
               Selected work
               <ArrowDown />
-            </a>
+            </MagneticLink>
             <a className="text-link" href={`mailto:${SITE.email}`}>
               Start a conversation
               <ArrowUpRight />

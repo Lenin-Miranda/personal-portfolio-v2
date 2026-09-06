@@ -26,9 +26,9 @@ export default function ProjectBackLink({ slug }: ProjectBackLinkProps) {
       return;
     }
 
-    const source = document.querySelector<HTMLElement>(
-      `[data-project-hero-media="${slug}"]`,
-    );
+    const source = event.currentTarget
+      .closest(".project-case-hero")
+      ?.querySelector<HTMLElement>("[data-project-hero-media]");
 
     if (!source) {
       return;
@@ -43,6 +43,7 @@ export default function ProjectBackLink({ slug }: ProjectBackLinkProps) {
       className="project-back-link"
       href={`/#${slug}`}
       onClick={handleClick}
+      onFocus={() => router.prefetch("/")}
     >
       <ArrowLeft />
       Selected work

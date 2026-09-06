@@ -6,6 +6,7 @@ import {
 import { ArrowUpRight } from "./Icons";
 import ProjectCard from "./ProjectCard";
 import { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
+import { stagger } from "./motion/tokens";
 
 export default function ProjectsShowcase() {
   return (
@@ -19,7 +20,7 @@ export default function ProjectsShowcase() {
           <RevealItem className="section-index" level="meta">
             <p>02 / Selected work</p>
           </RevealItem>
-          <MaskedReveal className="section-heading-title">
+          <MaskedReveal className="section-heading-title" pattern="line">
             <h2 id="work-title">Systems are the product.</h2>
           </MaskedReveal>
           <RevealItem className="section-deck">
@@ -41,7 +42,7 @@ export default function ProjectsShowcase() {
             <RevealItem className="eyebrow" level="meta">
               <p>Additional build notes</p>
             </RevealItem>
-            <MaskedReveal className="additional-work-title">
+            <MaskedReveal className="additional-work-title" pattern="quiet">
               <h3>More of the system, less of the thumbnail.</h3>
             </MaskedReveal>
           </RevealGroup>
@@ -52,7 +53,7 @@ export default function ProjectsShowcase() {
                 amount={0.28}
                 className="additional-project"
                 key={project.title}
-                stagger={0.08}
+                stagger={stagger.tight}
               >
                 <RevealItem className="additional-project-number" level="meta">
                   <span>{project.number}</span>

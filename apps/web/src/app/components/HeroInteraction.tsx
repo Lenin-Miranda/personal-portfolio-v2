@@ -1,9 +1,8 @@
 "use client";
 
 import { type ReactNode, useEffect, useRef } from "react";
+import { duration } from "./motion/tokens";
 
-const POINTER_EASING = 0.11;
-const SCROLL_EASING = 0.16;
 const SETTLED_THRESHOLD = 0.001;
 
 type HeroInteractionProps = {
@@ -20,94 +19,126 @@ export default function HeroInteraction({ children }: HeroInteractionProps) {
   useEffect(() => {
     const hero = heroRef.current;
 
-    if (!hero) {
-      return;
-    }
+    if (!hero) return;
 
     const reducedMotionQuery = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     );
-    const finePointerQuery = window.matchMedia(
-      "(hover: hover) and (pointer: fine)",
+    const depthQuery = window.matchMedia(
+      "(min-width: 48rem) and (hover: hover) and (pointer: fine)",
     );
     let animationFrame = 0;
+    let lastTimestamp = 0;
     let currentX = 0;
     let currentY = 0;
     let currentScroll = 0;
     let pointerClientX = 0;
     let pointerClientY = 0;
     let pointerIsInside = false;
+    let isVisible = false;
+    let boundsAreDirty = true;
+    let heroLeft = 0;
+    let heroTop = 0;
+    let heroWidth = 1;
+    let heroHeight = 1;
+    let viewportHeight = window.innerHeight;
 
-    const renderFrame = () => {
+    const resetDepth = () => {
+      currentX = 0;
+      currentY = 0;
+      currentScroll = 0;
+      pointerIsInside = false;
+      hero.style.setProperty("--hero-x", "0");
+      hero.style.setProperty("--hero-y", "0");
+      hero.style.setProperty("--hero-scroll", "0");
+      hero.style.setProperty("--hero-active", "0");
+    };
+
+    const renderFrame = (timestamp: number) => {
       animationFrame = 0;
 
-      if (reducedMotionQuery.matches) {
-        hero.style.setProperty("--hero-x", "0");
-        hero.style.setProperty("--hero-y", "0");
-        hero.style.setProperty("--hero-scroll", "0");
-        hero.style.setProperty("--hero-active", "0");
+      if (!isVisible || document.hidden) return;
+      if (reducedMotionQuery.matches || !depthQuery.matches) {
+        resetDepth();
         return;
       }
 
-      const bounds = hero.getBoundingClientRect();
-      let targetX = 0;
-      let targetY = 0;
-
-      if (pointerIsInside && finePointerQuery.matches) {
-        targetX = clamp(
-          ((pointerClientX - bounds.left) / Math.max(bounds.width, 1) - 0.5) *
-            2,
-          -1,
-          1,
-        );
-        targetY = clamp(
-          ((pointerClientY - bounds.top) / Math.max(bounds.height, 1) - 0.5) *
-            2,
-          -1,
-          1,
-        );
+      // The hero itself never transforms. Cache its geometry and read again
+      // only after a resize; pointer interpolation does not need layout reads.
+      if (boundsAreDirty) {
+        const bounds = hero.getBoundingClientRect();
+        heroLeft = bounds.left;
+        heroTop = bounds.top + window.scrollY;
+        heroWidth = Math.max(bounds.width, 1);
+        heroHeight = Math.max(bounds.height, 1);
+        viewportHeight = window.innerHeight;
+        boundsAreDirty = false;
       }
 
+      const scrollY = window.scrollY;
+      const targetX = pointerIsInside
+        ? clamp(((pointerClientX - heroLeft) / heroWidth - 0.5) * 2, -1, 1)
+        : 0;
+      const targetY = pointerIsInside
+        ? clamp(
+            ((pointerClientY - heroTop + scrollY) / heroHeight - 0.5) * 2,
+            -1,
+            1,
+          )
+        : 0;
       const targetScroll = clamp(
-        -bounds.top / Math.max(window.innerHeight * 0.72, 1),
+        (scrollY - heroTop) / Math.max(viewportHeight * 0.9, 1),
         0,
         1,
       );
+      const elapsed = lastTimestamp
+        ? Math.min(timestamp - lastTimestamp, 40)
+        : 16;
+      const pointerEase = 1 - Math.exp(-elapsed / (duration.fast * 500));
+      const scrollEase = 1 - Math.exp(-elapsed / (duration.standard * 250));
+      lastTimestamp = timestamp;
 
-      currentX += (targetX - currentX) * POINTER_EASING;
-      currentY += (targetY - currentY) * POINTER_EASING;
-      currentScroll += (targetScroll - currentScroll) * SCROLL_EASING;
+      currentX += (targetX - currentX) * pointerEase;
+      currentY += (targetY - currentY) * pointerEase;
+      currentScroll += (targetScroll - currentScroll) * scrollEase;
 
       hero.style.setProperty("--hero-x", currentX.toFixed(4));
       hero.style.setProperty("--hero-y", currentY.toFixed(4));
       hero.style.setProperty("--hero-scroll", currentScroll.toFixed(4));
-      hero.style.setProperty(
-        "--hero-active",
-        pointerIsInside && finePointerQuery.matches ? "1" : "0",
-      );
+      hero.style.setProperty("--hero-active", pointerIsInside ? "1" : "0");
 
-      const pointerIsSettled =
-        Math.abs(targetX - currentX) < SETTLED_THRESHOLD &&
-        Math.abs(targetY - currentY) < SETTLED_THRESHOLD;
-      const scrollIsSettled =
-        Math.abs(targetScroll - currentScroll) < SETTLED_THRESHOLD;
-
-      if (!pointerIsSettled || !scrollIsSettled) {
+      if (
+        Math.abs(targetX - currentX) > SETTLED_THRESHOLD ||
+        Math.abs(targetY - currentY) > SETTLED_THRESHOLD ||
+        Math.abs(targetScroll - currentScroll) > SETTLED_THRESHOLD
+      ) {
         animationFrame = window.requestAnimationFrame(renderFrame);
+      } else {
+        lastTimestamp = 0;
       }
     };
 
     const requestRender = () => {
-      if (!animationFrame) {
+      if (!animationFrame && isVisible && !document.hidden) {
         animationFrame = window.requestAnimationFrame(renderFrame);
       }
     };
 
+    const stopRendering = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      lastTimestamp = 0;
+      pointerIsInside = false;
+    };
+
     const handlePointerMove = (event: PointerEvent) => {
-      if (!finePointerQuery.matches || reducedMotionQuery.matches) {
+      if (
+        !depthQuery.matches ||
+        reducedMotionQuery.matches ||
+        event.pointerType === "touch"
+      ) {
         return;
       }
-
       pointerClientX = event.clientX;
       pointerClientY = event.clientY;
       pointerIsInside = true;
@@ -119,33 +150,56 @@ export default function HeroInteraction({ children }: HeroInteractionProps) {
       requestRender();
     };
 
-    const handleCapabilityChange = () => {
-      if (reducedMotionQuery.matches || !finePointerQuery.matches) {
-        pointerIsInside = false;
-      }
-
+    const handleResize = () => {
+      boundsAreDirty = true;
       requestRender();
     };
 
-    const resizeObserver = new ResizeObserver(requestRender);
+    const handleCapabilityChange = () => {
+      if (reducedMotionQuery.matches || !depthQuery.matches) {
+        stopRendering();
+        resetDepth();
+      } else {
+        requestRender();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopRendering();
+      else requestRender();
+    };
+
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      isVisible = entry?.isIntersecting ?? false;
+      if (isVisible) {
+        boundsAreDirty = true;
+        requestRender();
+      } else {
+        stopRendering();
+      }
+    });
+    const resizeObserver = new ResizeObserver(handleResize);
+    intersectionObserver.observe(hero);
     resizeObserver.observe(hero);
     hero.addEventListener("pointermove", handlePointerMove, { passive: true });
     hero.addEventListener("pointerleave", handlePointerLeave);
     window.addEventListener("scroll", requestRender, { passive: true });
-    window.addEventListener("resize", requestRender, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     reducedMotionQuery.addEventListener("change", handleCapabilityChange);
-    finePointerQuery.addEventListener("change", handleCapabilityChange);
-    requestRender();
+    depthQuery.addEventListener("change", handleCapabilityChange);
 
     return () => {
+      intersectionObserver.disconnect();
       resizeObserver.disconnect();
       hero.removeEventListener("pointermove", handlePointerMove);
       hero.removeEventListener("pointerleave", handlePointerLeave);
       window.removeEventListener("scroll", requestRender);
-      window.removeEventListener("resize", requestRender);
+      window.removeEventListener("resize", handleResize);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       reducedMotionQuery.removeEventListener("change", handleCapabilityChange);
-      finePointerQuery.removeEventListener("change", handleCapabilityChange);
-      window.cancelAnimationFrame(animationFrame);
+      depthQuery.removeEventListener("change", handleCapabilityChange);
+      stopRendering();
     };
   }, []);
 

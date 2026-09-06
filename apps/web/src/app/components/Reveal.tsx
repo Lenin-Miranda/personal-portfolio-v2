@@ -2,9 +2,11 @@
 
 import { motion, type Variants } from "motion/react";
 import { type ReactNode } from "react";
+import { distance, duration, ease, stagger as sequence } from "./motion/tokens";
+import { useMotionCapabilities } from "./motion/useMotionCapabilities";
 
 export type RevealLevel = "heading" | "content" | "meta";
-
+type RevealPattern = "rise" | "line" | "quiet";
 type RevealProps = {
   amount?: number;
   children: ReactNode;
@@ -12,49 +14,35 @@ type RevealProps = {
   delay?: number;
   level?: RevealLevel;
 };
-
-type RevealGroupProps = RevealProps & {
-  stagger?: number;
+type RevealGroupProps = RevealProps & { stagger?: number };
+type RevealItemProps = Pick<RevealProps, "children" | "className" | "level">;
+type RevealSettings = {
+  compact: boolean;
+  delay?: number;
+  level: RevealLevel;
+  reduced: boolean;
 };
 
-type RevealItemProps = {
-  children: ReactNode;
-  className?: string;
-  level?: RevealLevel;
+const levelMotion = {
+  heading: { duration: duration.section, y: distance.hero },
+  content: { duration: duration.reveal, y: distance.content },
+  meta: { duration: duration.standard, y: distance.small },
 };
 
-const EASE_OUT = [0.16, 1, 0.3, 1] as const;
-const LEVEL_MOTION: Record<
-  RevealLevel,
-  { duration: number; opacity: number; y: number }
-> = {
-  heading: { duration: 0.64, opacity: 0, y: 34 },
-  content: { duration: 0.52, opacity: 0, y: 24 },
-  meta: { duration: 0.38, opacity: 0, y: 10 },
-};
-
-const ITEM_VARIANTS: Variants = {
-  hidden: (level: RevealLevel = "content") => ({
-    opacity: LEVEL_MOTION[level].opacity,
-    y: LEVEL_MOTION[level].y,
+const itemVariants: Variants = {
+  hidden: ({ compact, level, reduced }: RevealSettings) => ({
+    opacity: reduced ? 1 : 0,
+    y: reduced ? 0 : levelMotion[level].y * (compact ? 0.45 : 1),
   }),
-  visible: (level: RevealLevel = "content") => ({
+  visible: ({ compact, delay = 0, level, reduced }: RevealSettings) => ({
     opacity: 1,
-    transition: {
-      duration: LEVEL_MOTION[level].duration,
-      ease: EASE_OUT,
-    },
     y: 0,
+    transition: {
+      delay: reduced ? 0 : delay * (compact ? 0.5 : 1),
+      duration: reduced ? 0 : levelMotion[level].duration * (compact ? 0.8 : 1),
+      ease: ease.out,
+    },
   }),
-};
-
-const MASK_VARIANTS: Variants = {
-  hidden: { opacity: 0.2, y: "108%" },
-  visible: {
-    opacity: 1,
-    transition: { duration: 0.64, ease: EASE_OUT },
-    y: "0%",
-  },
 };
 
 export default function Reveal({
@@ -64,19 +52,15 @@ export default function Reveal({
   delay = 0,
   level = "content",
 }: RevealProps) {
-  const motionLevel = LEVEL_MOTION[level];
-
+  const { compact, reduced } = useMotionCapabilities();
   return (
     <motion.div
       className={`motion-reveal${className ? ` ${className}` : ""}`}
-      initial={{ opacity: motionLevel.opacity, y: motionLevel.y }}
-      transition={{
-        delay,
-        duration: motionLevel.duration,
-        ease: EASE_OUT,
-      }}
+      custom={{ compact, delay, level, reduced }}
+      initial="hidden"
+      variants={itemVariants}
       viewport={{ amount, margin: "0px 0px -8% 0px", once: true }}
-      whileInView={{ opacity: 1, y: 0 }}
+      whileInView="visible"
     >
       {children}
     </motion.div>
@@ -84,27 +68,26 @@ export default function Reveal({
 }
 
 export function RevealGroup({
-  amount = 0.28,
+  amount = 0.22,
   children,
   className,
   delay = 0,
-  stagger = 0.09,
+  stagger = sequence.content,
 }: RevealGroupProps) {
-  const variants: Variants = {
-    hidden: {},
-    visible: {
-      transition: {
-        delayChildren: delay,
-        staggerChildren: stagger,
-      },
-    },
-  };
-
+  const { compact, reduced } = useMotionCapabilities();
   return (
     <motion.div
       className={className}
       initial="hidden"
-      variants={variants}
+      variants={{
+        hidden: {},
+        visible: {
+          transition: {
+            delayChildren: reduced ? 0 : delay * (compact ? 0.5 : 1),
+            staggerChildren: reduced ? 0 : stagger * (compact ? 0.6 : 1),
+          },
+        },
+      }}
       viewport={{ amount, margin: "0px 0px -8% 0px", once: true }}
       whileInView="visible"
     >
@@ -118,11 +101,12 @@ export function RevealItem({
   className,
   level = "content",
 }: RevealItemProps) {
+  const { compact, reduced } = useMotionCapabilities();
   return (
     <motion.div
       className={`reveal-item${className ? ` ${className}` : ""}`}
-      custom={level}
-      variants={ITEM_VARIANTS}
+      custom={{ compact, level, reduced }}
+      variants={itemVariants}
     >
       {children}
     </motion.div>
@@ -132,10 +116,36 @@ export function RevealItem({
 export function MaskedReveal({
   children,
   className,
-}: Omit<RevealItemProps, "level">) {
+  pattern = "rise",
+}: Omit<RevealItemProps, "level"> & { pattern?: RevealPattern }) {
+  const { compact, reduced } = useMotionCapabilities();
+  const variants: Variants = {
+    hidden: reduced
+      ? { opacity: 1, y: 0, clipPath: "inset(0% 0% 0% 0%)" }
+      : pattern === "quiet"
+        ? { opacity: 0, y: 0 }
+        : pattern === "line"
+          ? {
+              opacity: 1,
+              y: compact ? 8 : 16,
+              clipPath: "inset(0% 0% 100% 0%)",
+            }
+          : { opacity: 0.4, y: compact ? "35%" : "105%" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      clipPath: "inset(0% 0% 0% 0%)",
+      transition: {
+        duration: reduced ? 0 : duration.section * (compact ? 0.75 : 1),
+        ease: ease.out,
+      },
+    },
+  };
   return (
-    <div className={`reveal-mask${className ? ` ${className}` : ""}`}>
-      <motion.div className="reveal-mask-inner" variants={MASK_VARIANTS}>
+    <div
+      className={`reveal-mask reveal-mask-${pattern}${className ? ` ${className}` : ""}`}
+    >
+      <motion.div className="reveal-mask-inner" variants={variants}>
         {children}
       </motion.div>
     </div>

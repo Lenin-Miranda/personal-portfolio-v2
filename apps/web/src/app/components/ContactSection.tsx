@@ -1,7 +1,9 @@
 import { SITE } from "../data/portfolio";
 import ContactForm from "./ContactForm";
 import { ArrowUpRight } from "./Icons";
+import MagneticLink from "./MagneticLink";
 import Reveal, { MaskedReveal, RevealGroup, RevealItem } from "./Reveal";
+import { stagger } from "./motion/tokens";
 
 export default function ContactSection() {
   return (
@@ -11,12 +13,19 @@ export default function ContactSection() {
       id="contact"
     >
       <div className="section-inner">
+        <div aria-hidden="true" className="contact-arrival-line">
+          <span />
+        </div>
         <div className="contact-layout">
-          <RevealGroup amount={0.22} className="contact-heading" stagger={0.08}>
+          <RevealGroup
+            amount={0.22}
+            className="contact-heading"
+            stagger={stagger.content}
+          >
             <RevealItem className="section-index" level="meta">
               <p>04 / Contact</p>
             </RevealItem>
-            <MaskedReveal className="contact-title-mask">
+            <MaskedReveal className="contact-title-mask" pattern="line">
               <h2 id="contact-title">
                 Let’s talk about the system behind the screen.
               </h2>
@@ -28,14 +37,21 @@ export default function ContactSection() {
               </p>
             </RevealItem>
             <RevealItem level="meta">
-              <a className="contact-direct-email" href={`mailto:${SITE.email}`}>
+              <MagneticLink
+                className="contact-direct-email"
+                href={`mailto:${SITE.email}`}
+              >
                 {SITE.email}
                 <ArrowUpRight />
-              </a>
+              </MagneticLink>
             </RevealItem>
           </RevealGroup>
 
-          <Reveal amount={0.18} className="contact-form-column" delay={0.12}>
+          <Reveal
+            amount={0.18}
+            className="contact-form-column"
+            delay={stagger.content}
+          >
             <ContactForm fallbackEmail={SITE.email} />
           </Reveal>
         </div>

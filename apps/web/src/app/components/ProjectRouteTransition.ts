@@ -1,54 +1,49 @@
 "use client";
 
-const ORIGIN_STORAGE_KEY = "portfolio-project-origin:v1";
+const ORIGIN_STORAGE_KEY = "portfolio-project-origin:v2";
+const ORIGIN_HISTORY_KEY = "portfolioProjectOrigin";
 const SHARED_MEDIA_NAME = "project-media";
-const TRANSITION_GUARD_MS = 2500;
+const TRANSITION_GUARD_MS = 1800;
 
-type ProjectOrigin = {
-  savedAt: number;
-  scrollY: number;
-  slug: string;
-};
-
+type ProjectOrigin = { savedAt: number; scrollY: number; slug: string };
 type RouterNavigation = {
   back: () => void;
   push: (href: string, options?: { scroll?: boolean }) => void;
 };
-
-type TransitionDirection = "backward" | "forward";
-
 type StartTransitionOptions = {
-  direction: TransitionDirection;
+  direction: "backward" | "forward";
   navigate: () => void;
-  onFinished?: () => void;
   onTargetReady?: (target: HTMLElement) => void;
   source: HTMLElement;
   targetSelector: string;
+  usesHistory?: boolean;
 };
 
 let transitionInFlight = false;
-let activeOriginSlug: string | null = null;
+let activeOrigin: ProjectOrigin | null = null;
 
-function prefersReducedMotion() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function supportsViewTransitions() {
-  return typeof document.startViewTransition === "function";
+function isProjectOrigin(value: unknown): value is ProjectOrigin {
+  if (!value || typeof value !== "object") return false;
+  const origin = value as Partial<ProjectOrigin>;
+  return (
+    typeof origin.slug === "string" &&
+    typeof origin.savedAt === "number" &&
+    typeof origin.scrollY === "number" &&
+    Number.isFinite(origin.scrollY) &&
+    origin.scrollY >= 0 &&
+    origin.savedAt <= Date.now() &&
+    Date.now() - origin.savedAt < 1000 * 60 * 60 * 2
+  );
 }
 
 function getStoredOrigin(slug: string) {
+  if (activeOrigin?.slug === slug && isProjectOrigin(activeOrigin))
+    return activeOrigin;
   try {
-    const value = window.sessionStorage.getItem(ORIGIN_STORAGE_KEY);
-
-    if (!value) {
-      return null;
-    }
-
-    const origin = JSON.parse(value) as ProjectOrigin;
-    const isRecent = Date.now() - origin.savedAt < 1000 * 60 * 60 * 2;
-
-    return origin.slug === slug && isRecent ? origin : null;
+    const value: unknown = JSON.parse(
+      window.sessionStorage.getItem(ORIGIN_STORAGE_KEY) ?? "null",
+    );
+    return isProjectOrigin(value) && value.slug === slug ? value : null;
   } catch {
     return null;
   }
@@ -60,184 +55,178 @@ function storeOrigin(slug: string) {
     scrollY: window.scrollY,
     slug,
   };
-
+  activeOrigin = origin;
   try {
     window.sessionStorage.setItem(ORIGIN_STORAGE_KEY, JSON.stringify(origin));
-    activeOriginSlug = slug;
   } catch {
-    // Navigation remains fully functional when storage is unavailable.
-    activeOriginSlug = slug;
+    // The in-memory origin still restores context when storage is unavailable.
   }
+  return origin;
 }
 
 function waitForElement(selector: string, signal: AbortSignal) {
   return new Promise<HTMLElement>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(signal.reason);
+      return;
+    }
     const existing = document.querySelector<HTMLElement>(selector);
-
     if (existing) {
       resolve(existing);
       return;
     }
 
+    const cleanup = () => {
+      observer.disconnect();
+      signal.removeEventListener("abort", handleAbort);
+    };
+    const handleAbort = () => {
+      cleanup();
+      reject(signal.reason);
+    };
     const observer = new MutationObserver(() => {
       const target = document.querySelector<HTMLElement>(selector);
-
       if (target) {
-        observer.disconnect();
+        cleanup();
         resolve(target);
       }
     });
-
-    const handleAbort = () => {
-      observer.disconnect();
-      reject(new DOMException("Project transition interrupted", "AbortError"));
-    };
-
     signal.addEventListener("abort", handleAbort, { once: true });
     observer.observe(document.body, { childList: true, subtree: true });
   });
 }
 
+/** A slow image must never keep a browser navigation snapshot frozen. */
 async function waitForMedia(target: HTMLElement, signal: AbortSignal) {
-  const images = Array.from(target.querySelectorAll("img"));
-
-  await Promise.all(
-    images.map(async (image) => {
-      if (signal.aborted) {
-        return;
-      }
-
-      try {
-        await image.decode();
-      } catch {
-        // A cached source can be captured even if decode reports an interruption.
-      }
-    }),
-  );
+  let timeout = 0;
+  let handleAbort: () => void = () => undefined;
+  const boundedWait = new Promise<void>((resolve) => {
+    handleAbort = resolve;
+    timeout = window.setTimeout(resolve, 180);
+    signal.addEventListener("abort", handleAbort, { once: true });
+    if (signal.aborted) resolve();
+  });
+  try {
+    await Promise.race([
+      Promise.all(
+        Array.from(target.querySelectorAll("img"), (image) =>
+          image.decode().catch(() => undefined),
+        ),
+      ),
+      boundedWait,
+    ]);
+  } finally {
+    window.clearTimeout(timeout);
+    signal.removeEventListener("abort", handleAbort);
+  }
 }
 
-function nextFrame() {
-  return new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => resolve());
-  });
+function restoreFocus(target: HTMLElement, direction: "backward" | "forward") {
+  const focusTarget =
+    direction === "forward"
+      ? document.getElementById("project-case-title")
+      : target
+          .closest(".project-chapter")
+          ?.querySelector<HTMLElement>(".project-case-study-link");
+  focusTarget?.focus({ preventScroll: true });
 }
 
 async function startProjectTransition({
   direction,
   navigate,
-  onFinished,
   onTargetReady,
   source,
   targetSelector,
+  usesHistory = false,
 }: StartTransitionOptions) {
-  if (transitionInFlight) {
-    return;
-  }
-
-  if (prefersReducedMotion() || !supportsViewTransitions()) {
-    transitionInFlight = true;
-    const root = document.documentElement;
-    const previousScrollBehavior = root.style.scrollBehavior;
-    const previousScrollRestoration = window.history.scrollRestoration;
-    const controller = new AbortController();
-    const guard = window.setTimeout(
-      () => controller.abort(),
-      TRANSITION_GUARD_MS,
-    );
-    const targetPromise = waitForElement(targetSelector, controller.signal);
-
-    if (direction === "backward") {
-      root.style.scrollBehavior = "auto";
-      window.history.scrollRestoration = "manual";
-    }
-
-    navigate();
-
-    try {
-      const target = await targetPromise;
-      onTargetReady?.(target);
-      onFinished?.();
-    } catch {
-      // The route still completes if its enhancement target cannot be found.
-    } finally {
-      window.clearTimeout(guard);
-      transitionInFlight = false;
-
-      if (direction === "backward") {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            root.style.scrollBehavior = previousScrollBehavior;
-            window.history.scrollRestoration = previousScrollRestoration;
-          });
-        });
-      }
-    }
-
-    return;
-  }
-
+  if (transitionInFlight) return;
   transitionInFlight = true;
+
   const root = document.documentElement;
-  const sourceChapter = source.closest<HTMLElement>(".project-chapter");
   const previousScrollBehavior = root.style.scrollBehavior;
   const previousScrollRestoration = window.history.scrollRestoration;
   const controller = new AbortController();
-  const guard = window.setTimeout(
-    () => controller.abort(),
-    TRANSITION_GUARD_MS,
-  );
-  const handlePopState = () => controller.abort();
+  const sourceChapter = source.closest<HTMLElement>(".project-chapter");
+  const canAnimate =
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+    typeof document.startViewTransition === "function";
+  let transition: ViewTransition | undefined;
   let target: HTMLElement | null = null;
+  let didNavigate = false;
+  let expectedHistoryEvent = usesHistory;
 
-  root.dataset.projectTransition = direction;
-
-  if (direction === "backward") {
-    root.style.scrollBehavior = "auto";
-    window.history.scrollRestoration = "manual";
-  }
-
-  sourceChapter?.setAttribute("data-project-opening", "true");
-  source.style.viewTransitionName = SHARED_MEDIA_NAME;
-  window.addEventListener("popstate", handlePopState, { once: true });
-
-  await nextFrame();
-
-  const transition = document.startViewTransition(async () => {
-    const targetPromise = waitForElement(targetSelector, controller.signal);
+  const interrupt = () => {
+    controller.abort();
+    transition?.skipTransition();
+  };
+  const handlePopState = () => {
+    // router.back() produces the first popstate itself; subsequent ones interrupt.
+    if (expectedHistoryEvent) {
+      expectedHistoryEvent = false;
+      return;
+    }
+    interrupt();
+  };
+  const guard = window.setTimeout(interrupt, TRANSITION_GUARD_MS);
+  const navigateOnce = () => {
+    if (didNavigate) return;
+    didNavigate = true;
     navigate();
+  };
 
+  root.style.scrollBehavior = "auto";
+  if (direction === "backward") window.history.scrollRestoration = "manual";
+  window.addEventListener("popstate", handlePopState);
+
+  const update = async () => {
+    // Capture the old media first, then remove its name before the new tree mounts.
+    source.style.removeProperty("view-transition-name");
+    const targetPromise = waitForElement(targetSelector, controller.signal);
+    navigateOnce();
     try {
       target = await targetPromise;
+      if (controller.signal.aborted) return;
       onTargetReady?.(target);
-      target.style.viewTransitionName = SHARED_MEDIA_NAME;
+      if (canAnimate) target.style.viewTransitionName = SHARED_MEDIA_NAME;
       await waitForMedia(target, controller.signal);
+      // Rendering is suspended inside this callback: awaiting rAF would deadlock
+      // until the guard expires instead of letting the shared-media animation run.
     } catch {
-      // The route still completes; only the progressive transition is skipped.
+      // The enhancement can expire while the route continues loading normally.
     }
-  });
+  };
 
-  transition.finished
-    .catch(() => undefined)
-    .finally(() => {
-      window.clearTimeout(guard);
-      window.removeEventListener("popstate", handlePopState);
-      source.style.removeProperty("view-transition-name");
-      target?.style.removeProperty("view-transition-name");
-      sourceChapter?.removeAttribute("data-project-opening");
-      delete root.dataset.projectTransition;
-      transitionInFlight = false;
-      onFinished?.();
-      window.dispatchEvent(new Event("project-transition-finished"));
-
-      if (direction === "backward") {
-        window.requestAnimationFrame(() => {
-          window.requestAnimationFrame(() => {
-            root.style.scrollBehavior = previousScrollBehavior;
-            window.history.scrollRestoration = previousScrollRestoration;
-          });
-        });
-      }
-    });
+  try {
+    if (canAnimate) {
+      root.dataset.projectTransition = direction;
+      sourceChapter?.setAttribute("data-project-opening", "true");
+      source.style.viewTransitionName = SHARED_MEDIA_NAME;
+      transition = document.startViewTransition(update);
+      // ready rejects when the browser declines a snapshot; routing must still work.
+      void transition.ready.catch(() => undefined);
+      await transition.finished.catch(() => undefined);
+    } else {
+      await update();
+    }
+  } catch {
+    // A synchronous browser API failure should behave exactly like a normal link.
+    navigateOnce();
+  } finally {
+    window.clearTimeout(guard);
+    controller.abort();
+    window.removeEventListener("popstate", handlePopState);
+    source.style.removeProperty("view-transition-name");
+    // The callback mutates target asynchronously, outside TypeScript's narrowing.
+    const resolvedTarget = target as HTMLElement | null;
+    resolvedTarget?.style.removeProperty("view-transition-name");
+    sourceChapter?.removeAttribute("data-project-opening");
+    delete root.dataset.projectTransition;
+    transitionInFlight = false;
+    window.dispatchEvent(new Event("project-transition-finished"));
+    if (resolvedTarget?.isConnected) restoreFocus(resolvedTarget, direction);
+    root.style.scrollBehavior = previousScrollBehavior;
+    window.history.scrollRestoration = previousScrollRestoration;
+  }
 }
 
 export function openProject(
@@ -245,20 +234,26 @@ export function openProject(
   slug: string,
   source: HTMLElement,
 ) {
-  storeOrigin(slug);
-
+  if (transitionInFlight) return;
+  const origin = storeOrigin(slug);
   if (window.location.hash) {
-    const cleanOriginUrl = `${window.location.pathname}${window.location.search}`;
     window.history.replaceState(
       window.history.state,
       "",
-      cleanOriginUrl || "/",
+      `${window.location.pathname}${window.location.search}`,
     );
   }
-
   void startProjectTransition({
     direction: "forward",
     navigate: () => router.push(`/projects/${slug}`),
+    onTargetReady: () => {
+      window.scrollTo({ behavior: "instant", left: 0, top: 0 });
+      // Match the saved origin to this history entry, including after a reload.
+      window.history.replaceState(
+        { ...window.history.state, [ORIGIN_HISTORY_KEY]: origin },
+        "",
+      );
+    },
     source,
     targetSelector: `[data-project-hero-media="${slug}"]`,
   });
@@ -270,27 +265,29 @@ export function returnToProjectOrigin(
   source: HTMLElement,
 ) {
   const origin = getStoredOrigin(slug);
-  const navigationEntry = performance.getEntriesByType("navigation")[0] as
-    PerformanceNavigationTiming | undefined;
-  const originBelongsToThisVisit =
-    activeOriginSlug === slug || navigationEntry?.type === "reload";
-  const canReturnThroughHistory = origin && originBelongsToThisVisit;
-
-  if (!canReturnThroughHistory) {
-    router.push(`/#${slug}`);
-    return;
-  }
-
+  const historyOrigin: unknown = window.history.state?.[ORIGIN_HISTORY_KEY];
+  const canReturnThroughHistory = Boolean(
+    origin &&
+    isProjectOrigin(historyOrigin) &&
+    historyOrigin.slug === slug &&
+    historyOrigin.savedAt === origin.savedAt,
+  );
   void startProjectTransition({
     direction: "backward",
-    navigate: () => router.back(),
-    onFinished: () => {
-      window.scrollTo({ behavior: "instant", left: 0, top: origin.scrollY });
-    },
-    onTargetReady: () => {
-      window.scrollTo({ behavior: "instant", left: 0, top: origin.scrollY });
+    navigate: () =>
+      canReturnThroughHistory ? router.back() : router.push(`/#${slug}`),
+    onTargetReady: (target) => {
+      const chapter = target.closest<HTMLElement>(".project-chapter");
+      // A revisited chapter is already established in the visitor's spatial model.
+      chapter?.setAttribute("data-project-restored", "true");
+      if (canReturnThroughHistory && origin) {
+        window.scrollTo({ behavior: "instant", left: 0, top: origin.scrollY });
+      } else {
+        chapter?.scrollIntoView({ behavior: "instant", block: "start" });
+      }
     },
     source,
     targetSelector: `[data-project-card-media="${slug}"]`,
+    usesHistory: canReturnThroughHistory,
   });
 }

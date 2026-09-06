@@ -1,0 +1,144 @@
+/* One engineering guideline connects entries; the text keeps its full contrast. */
+.experience-list > li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.experience-timeline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: var(--paper-border);
+}
+
+.experience-timeline-fill {
+  position: absolute;
+  inset: 0;
+  background: #5f730f;
+  transform: scaleY(var(--experience-progress, 0));
+  transform-origin: center top;
+}
+
+.experience-timeline-node {
+  position: absolute;
+  top: clamp(3rem, 5vw, 5rem);
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ink-subtle);
+  border-radius: 50%;
+  background: var(--paper);
+  transition:
+    transform var(--motion-standard) var(--ease-out),
+    background-color var(--motion-fast);
+}
+
+[data-experience-entry][data-active="true"] .experience-timeline-node {
+  background: #5f730f;
+  border-color: #5f730f;
+  transform: scale(1.35);
+}
+
+.experience-company {
+  margin-bottom: var(--space-3);
+  color: var(--ink-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.experience-entry .reveal-mask {
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.about-emphasis {
+  color: var(--ink);
+}
+
+/* Keep progress in the outer gutter so it never competes with project proof. */
+.continuity-rail {
+  top: 50%;
+  right: calc(var(--page-gutter) / 2 - 8px);
+  bottom: auto;
+  width: 16px;
+  height: 7rem;
+}
+
+.continuity-marker {
+  display: block;
+  text-align: center;
+}
+
+.continuity-marker > span:last-child,
+.continuity-marker-frame {
+  display: none;
+}
+
+.continuity-track {
+  left: 50%;
+  right: auto;
+  width: 1px;
+  height: 4rem;
+  transform: none;
+}
+
+.continuity-track-fill {
+  transform: scaleY(var(--continuity-section-progress));
+  transform-origin: center top;
+}
+
+.continuity-track-node {
+  top: 0;
+  left: 0;
+  transform: translate3d(0, var(--continuity-node-x), 0);
+  margin-top: -0.15rem;
+}
+
+@media (max-width: 63.99rem) {
+  .continuity-rail {
+    display: none;
+  }
+}
+
+/* The quieter chapter lets the human context and principles carry the rhythm. */
+@media (min-width: 64rem) {
+  .experience-entry {
+    min-height: clamp(25rem, 58dvh, 38rem);
+  }
+
+  .about-section .about-heading {
+    min-height: clamp(23rem, 48dvh, 35rem);
+  }
+
+  .principles,
+  .capabilities,
+  .education {
+    min-height: 0;
+    padding-block: clamp(4rem, 6vw, 6rem);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .experience-list > li {
+    padding-left: 1rem;
+  }
+
+  /* The header carries section context on phones; leave the reading area free. */
+  .continuity-rail {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-timeline-fill {
+    transform: none;
+  }
+
+  .experience-timeline-node {
+    transform: none !important;
+  }
+}

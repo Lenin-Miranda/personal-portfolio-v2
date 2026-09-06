@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { motionCssProperties } from "./components/motion/tokens";
 
 import "./globals.css";
 
@@ -25,8 +26,22 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html data-scroll-behavior="smooth" lang="en">
-      <body>{children}</body>
+    <html data-scroll-behavior="smooth" lang="en" style={motionCssProperties}>
+      <body>
+        {children}
+        <noscript>
+          <style>{`
+            .motion-reveal, .reveal-item, .reveal-mask-inner,
+            .project-image-reveal, .project-image-frame, .project-image-depth,
+            .project-case-heading, #project-case-title,
+            .project-case-positioning, .project-case-meta, .project-case-hero-links {
+              opacity: 1 !important;
+              transform: none !important;
+              clip-path: none !important;
+            }
+          `}</style>
+        </noscript>
+      </body>
     </html>
   );
 }

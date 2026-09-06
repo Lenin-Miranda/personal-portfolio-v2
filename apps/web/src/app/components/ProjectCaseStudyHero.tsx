@@ -1,19 +1,14 @@
 "use client";
 
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 import { PROJECT_STATUS_LABELS, type FeaturedProject } from "../data/portfolio";
 import { ArrowUpRight } from "./Icons";
 import ProjectBackLink from "./ProjectBackLink";
 import ProjectVisual from "./ProjectVisual";
-
-const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+import { distance, duration, ease, stagger } from "./motion/tokens";
+import { useMotionCapabilities } from "./motion/useMotionCapabilities";
 
 export type ProjectCaseStudyHeroData = Pick<
   FeaturedProject,
@@ -38,7 +33,12 @@ export default function ProjectCaseStudyHero({
   project,
 }: ProjectCaseStudyHeroProps) {
   const heroRef = useRef<HTMLElement>(null);
-  const reduceMotion = useReducedMotion();
+  const {
+    compact,
+    finePointer,
+    reduced: reduceMotion,
+  } = useMotionCapabilities();
+  const depthEnabled = finePointer && !compact && !reduceMotion;
   const [isEstablished, setIsEstablished] = useState(false);
   const { scrollYProgress } = useScroll({
     offset: ["start start", "end start"],
@@ -56,22 +56,26 @@ export default function ProjectCaseStudyHero({
     const reveal = () => setIsEstablished(true);
 
     if (document.documentElement.dataset.projectTransition) {
+      // The content remains usable even if the browser skips the transition event.
+      const guard = window.setTimeout(reveal, 2000);
       window.addEventListener("project-transition-finished", reveal, {
         once: true,
       });
 
-      return () =>
+      return () => {
+        window.clearTimeout(guard);
         window.removeEventListener("project-transition-finished", reveal);
+      };
     }
 
     const frame = window.requestAnimationFrame(reveal);
     return () => window.cancelAnimationFrame(frame);
   }, [reduceMotion]);
 
-  const transition = (delay: number, duration = 0.52) => ({
-    delay: reduceMotion ? 0 : delay,
-    duration: reduceMotion ? 0 : duration,
-    ease: EASE_OUT,
+  const transition = (delay: number, timing: number = duration.reveal) => ({
+    delay: reduceMotion ? 0 : compact ? delay * 0.65 : delay,
+    duration: reduceMotion ? 0 : compact ? timing * 0.8 : timing,
+    ease: ease.out,
   });
 
   return (
@@ -83,10 +87,10 @@ export default function ProjectCaseStudyHero({
     >
       <div className="project-case-inner project-case-hero-inner">
         <motion.div
-          animate={isEstablished ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           className="project-case-topline"
           initial={false}
-          transition={transition(0.04, 0.38)}
+          transition={transition(0, duration.standard)}
         >
           <ProjectBackLink slug={project.id} />
           <p>{project.number} / Project case study</p>
@@ -94,7 +98,10 @@ export default function ProjectCaseStudyHero({
 
         <motion.div
           className="project-case-heading"
-          style={{ opacity: copyOpacity, y: copyY }}
+          style={{
+            opacity: depthEnabled ? copyOpacity : 1,
+            y: depthEnabled ? copyY : 0,
+          }}
         >
           <div className="project-case-title-block">
             <div className="project-case-title-mask">
@@ -106,7 +113,8 @@ export default function ProjectCaseStudyHero({
                 }
                 id="project-case-title"
                 initial={false}
-                transition={transition(0.1, 0.64)}
+                tabIndex={-1}
+                transition={transition(stagger.tight, duration.section)}
               >
                 {project.title}
               </motion.h1>
@@ -114,11 +122,16 @@ export default function ProjectCaseStudyHero({
 
             <motion.p
               animate={
-                isEstablished ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+                isEstablished
+                  ? { opacity: 1, y: 0 }
+                  : {
+                      opacity: 0,
+                      y: compact ? distance.small : distance.content,
+                    }
               }
               className="project-case-positioning"
               initial={false}
-              transition={transition(0.2)}
+              transition={transition(stagger.content * 2)}
             >
               {project.positioning}
             </motion.p>
@@ -130,7 +143,7 @@ export default function ProjectCaseStudyHero({
             }
             className="project-case-meta"
             initial={false}
-            transition={transition(0.29, 0.46)}
+            transition={transition(stagger.content * 3, duration.reveal)}
           >
             <div>
               <dt>Role</dt>
@@ -170,7 +183,7 @@ export default function ProjectCaseStudyHero({
           animate={isEstablished ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
           className="project-case-hero-links"
           initial={false}
-          transition={transition(0.38, 0.4)}
+          transition={transition(stagger.content * 4, duration.standard)}
         >
           {project.links.map((link) => (
             <a

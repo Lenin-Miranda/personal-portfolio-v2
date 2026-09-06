@@ -50,7 +50,14 @@ export default function SectionContinuity() {
     const reducedMotionQuery = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     );
+    const compactQuery = window.matchMedia("(max-width: 47.99rem)");
+    const experienceElements = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-experience-entry]"),
+    );
     let animationFrame = 0;
+    let disposed = false;
+    let trackLength = 0;
+    let experienceMetrics: SectionMetric[] = [];
     let footerTop = Number.POSITIVE_INFINITY;
     let metrics: SectionMetric[] = [];
     let lastSurface = "";
@@ -89,6 +96,10 @@ export default function SectionContinuity() {
           element.style.setProperty("--section-exit-shift", "0px");
           element.style.setProperty("--section-handoff-clip", "100%");
         });
+        experienceElements.forEach((element) => {
+          element.style.setProperty("--experience-progress", "1");
+          delete element.dataset.active;
+        });
         return;
       }
 
@@ -100,30 +111,47 @@ export default function SectionContinuity() {
         ),
       );
 
-      metrics.forEach(({ element }, index) => {
+      const motionScale = compactQuery.matches ? 0 : 1;
+      metrics.forEach(({ element, top, bottom }, index) => {
+        if (
+          bottom < scrollPosition - viewportHeight ||
+          top > scrollPosition + viewportHeight * 2
+        )
+          return;
         const enter = smoothstep(enterProgress[index] ?? 0);
         const exit = smoothstep(enterProgress[index + 1] ?? 0);
 
         element.style.setProperty(
           "--section-enter-opacity",
-          (0.78 + enter * 0.22).toFixed(4),
+          (0.94 + enter * 0.06).toFixed(4),
         );
         element.style.setProperty(
           "--section-enter-shift",
-          `${((1 - enter) * 20).toFixed(2)}px`,
+          `${((1 - enter) * 12 * motionScale).toFixed(2)}px`,
         );
         element.style.setProperty(
           "--section-exit-opacity",
-          (1 - exit * 0.3).toFixed(4),
+          (1 - exit * 0.08).toFixed(4),
         );
         element.style.setProperty(
           "--section-exit-shift",
-          `${(-exit * 22).toFixed(2)}px`,
+          `${(-exit * 12 * motionScale).toFixed(2)}px`,
         );
         element.style.setProperty(
           "--section-handoff-clip",
           `${((1 - enter) * 100).toFixed(3)}%`,
         );
+      });
+
+      // The same scheduled scroll pass advances the engineering history.
+      const readingLine = scrollPosition + viewportHeight * 0.52;
+      experienceMetrics.forEach(({ element, top, bottom, height }) => {
+        const progress = clamp((readingLine - top) / height);
+        element.style.setProperty("--experience-progress", progress.toFixed(4));
+        const active = readingLine >= top && readingLine < bottom;
+        if (element.dataset.active !== String(active)) {
+          element.dataset.active = String(active);
+        }
       });
 
       let upcomingIndex = metrics.findIndex(
@@ -253,8 +281,8 @@ export default function SectionContinuity() {
         readingProgress.toFixed(4),
       );
       rail.style.setProperty(
-        "--continuity-node-position",
-        `${(readingProgress * 100).toFixed(3)}%`,
+        "--continuity-node-x",
+        `${(readingProgress * trackLength).toFixed(2)}px`,
       );
       rail.style.setProperty(
         "--continuity-track-shift",
@@ -279,12 +307,13 @@ export default function SectionContinuity() {
     };
 
     const requestRender = () => {
-      if (!animationFrame) {
+      if (!disposed && !animationFrame) {
         animationFrame = window.requestAnimationFrame(render);
       }
     };
 
     const measure = () => {
+      if (disposed) return;
       const footer = document.querySelector<HTMLElement>(".site-footer");
 
       metrics = sectionElements.map((element) => {
@@ -298,6 +327,18 @@ export default function SectionContinuity() {
           top,
         };
       });
+      experienceMetrics = experienceElements.map((element) => {
+        const bounds = element.getBoundingClientRect();
+        const top = bounds.top + window.scrollY;
+        return {
+          element,
+          top,
+          bottom: top + bounds.height,
+          height: bounds.height,
+        };
+      });
+      trackLength =
+        rail.querySelector<HTMLElement>(".continuity-track")?.offsetHeight ?? 0;
       footerTop = footer
         ? footer.getBoundingClientRect().top + window.scrollY
         : Number.POSITIVE_INFINITY;
@@ -305,6 +346,10 @@ export default function SectionContinuity() {
     };
 
     const handleCapabilityChange = () => {
+      window.removeEventListener("scroll", requestRender);
+      if (!reducedMotionQuery.matches) {
+        window.addEventListener("scroll", requestRender, { passive: true });
+      }
       requestRender();
     };
     const handleResize = () => {
@@ -313,17 +358,22 @@ export default function SectionContinuity() {
     const resizeObserver = new ResizeObserver(measure);
 
     sectionElements.forEach((section) => resizeObserver.observe(section));
-    window.addEventListener("scroll", requestRender, { passive: true });
+    const hero = document.getElementById("top");
+    if (hero) resizeObserver.observe(hero);
+    handleCapabilityChange();
     window.addEventListener("resize", handleResize, { passive: true });
     reducedMotionQuery.addEventListener("change", handleCapabilityChange);
+    compactQuery.addEventListener("change", handleCapabilityChange);
     document.fonts.ready.then(measure).catch(() => undefined);
     measure();
 
     return () => {
+      disposed = true;
       resizeObserver.disconnect();
       window.removeEventListener("scroll", requestRender);
       window.removeEventListener("resize", handleResize);
       reducedMotionQuery.removeEventListener("change", handleCapabilityChange);
+      compactQuery.removeEventListener("change", handleCapabilityChange);
       window.cancelAnimationFrame(animationFrame);
     };
   }, []);

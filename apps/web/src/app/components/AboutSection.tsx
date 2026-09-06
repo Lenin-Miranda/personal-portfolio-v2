@@ -13,15 +13,19 @@ export default function AboutSection() {
           <RevealItem className="section-index" level="meta">
             <p>03 / About</p>
           </RevealItem>
-          <MaskedReveal className="section-heading-title">
+          <MaskedReveal className="section-heading-title" pattern="quiet">
             <h2 id="about-title">A product mindset across the whole stack.</h2>
           </MaskedReveal>
           <RevealItem className="section-deck">
             <p>
-              I’m a full-stack engineer based in Las Vegas. My work has moved
-              through automation at scale, backend lifecycle systems, commerce,
-              real-time products, and AI-connected communications—always with an
-              eye on how the complete experience holds together.
+              I’m a full-stack engineer based in{" "}
+              <span className="about-emphasis">Las Vegas</span>. My work has
+              moved through automation at scale, backend lifecycle systems,
+              commerce, real-time products, and AI-connected
+              communications—always with an eye on how{" "}
+              <span className="about-emphasis">
+                the complete experience holds together.
+              </span>
             </p>
           </RevealItem>
         </RevealGroup>
@@ -31,24 +35,20 @@ export default function AboutSection() {
             <RevealItem className="eyebrow" level="meta">
               <p>Working principles</p>
             </RevealItem>
-            <MaskedReveal className="subsection-title">
+            <MaskedReveal className="subsection-title" pattern="quiet">
               <h3 id="principles-title">
                 How I move from ambiguity to release.
               </h3>
             </MaskedReveal>
           </RevealGroup>
           <ol>
-            {PRINCIPLES.map((principle, index) => (
+            {PRINCIPLES.map((principle) => (
               <li key={principle.title}>
-                <Reveal
-                  amount={0.3}
-                  className="principle"
-                  delay={(index % 2) * 0.075}
-                >
+                <div className="principle">
                   <span>{principle.number}</span>
                   <h4>{principle.title}</h4>
                   <p>{principle.body}</p>
-                </Reveal>
+                </div>
               </li>
             ))}
           </ol>
@@ -59,7 +59,7 @@ export default function AboutSection() {
             <RevealItem className="eyebrow" level="meta">
               <p>Technical range</p>
             </RevealItem>
-            <MaskedReveal className="subsection-title">
+            <MaskedReveal className="subsection-title" pattern="quiet">
               <h3 id="capabilities-title">Tools in the context of the work.</h3>
             </MaskedReveal>
           </RevealGroup>
@@ -85,7 +85,7 @@ export default function AboutSection() {
             <RevealItem className="eyebrow" level="meta">
               <p>Education</p>
             </RevealItem>
-            <MaskedReveal className="subsection-title">
+            <MaskedReveal className="subsection-title" pattern="quiet">
               <h3 id="education-title">
                 Formal foundations, continued in practice.
               </h3>

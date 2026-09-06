@@ -1,0 +1,368 @@
+/* The entrance is one short sequence: paths → mark → identity → supporting UI.
+   Backwards fill releases animation properties to the scroll-depth styles. */
+.hero {
+  --hero-phase-step: var(--stagger-tight);
+  --hero-reveal-time: var(--motion-reveal);
+  --hero-reveal-distance: 105%;
+}
+
+.hero .hero-scene {
+  opacity: calc(0.5 + var(--hero-active) * 0.08 - var(--hero-scroll) * 0.22);
+  transform: translate3d(
+    calc(var(--hero-x) * -4px),
+    calc(var(--hero-y) * -3px + var(--hero-scroll) * 22px),
+    0
+  );
+}
+
+.hero .hero-schematic-depth {
+  transform: translate3d(
+    calc(var(--hero-x) * -5px),
+    calc(var(--hero-y) * -3px),
+    0
+  );
+}
+
+.hero .hero-schematic path {
+  stroke-dashoffset: 0;
+  animation: hero-path-resolve var(--hero-reveal-time) var(--ease-out) backwards;
+  animation-delay: calc(var(--hero-phase-step) * var(--path-step, 0));
+}
+
+.hero-schematic-paths path:nth-child(2) {
+  --path-step: 1;
+}
+.hero-schematic-paths path:nth-child(3) {
+  --path-step: 5;
+}
+.hero-schematic-paths path:nth-child(4) {
+  --path-step: 2;
+}
+.hero-schematic-paths path:nth-child(5) {
+  --path-step: 7;
+}
+
+.hero .hero-schematic circle {
+  opacity: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-node-resolve var(--motion-standard) var(--ease-out) backwards;
+  animation-delay: calc(var(--hero-phase-step) * var(--node-step, 4));
+}
+
+.hero-schematic-nodes circle:nth-child(2) {
+  --node-step: 9;
+}
+.hero-schematic-nodes circle:nth-child(3) {
+  --node-step: 5;
+}
+.hero-schematic-nodes circle:nth-child(4) {
+  --node-step: 11;
+}
+.hero-schematic-nodes circle:nth-child(5) {
+  --node-step: 6;
+}
+.hero-schematic-nodes circle:nth-child(6) {
+  --node-step: 9;
+}
+.hero-schematic-nodes circle:nth-child(7) {
+  --node-step: 13;
+}
+
+.hero .hero-grid-lines {
+  opacity: calc(0.9 - var(--hero-scroll) * 0.25);
+  transform: translate3d(calc(var(--hero-x) * 2px), 0, 0);
+  animation: hero-grid-resolve var(--motion-cinematic) var(--ease-out) backwards;
+}
+
+.hero .hero-scene-axis-horizontal {
+  transform: translate3d(
+    calc(var(--hero-x) * 5px),
+    calc(var(--hero-y) * 3px),
+    0
+  );
+}
+
+.hero .hero-scene-axis-vertical {
+  transform: translate3d(
+    calc(var(--hero-x) * 3px),
+    calc(var(--hero-y) * 5px),
+    0
+  );
+}
+
+.hero .hero-scene-readout {
+  top: 34%;
+  transform: translate3d(
+    calc(var(--hero-x) * 3px),
+    calc(var(--hero-y) * 2px),
+    0
+  );
+  animation: hero-content-resolve var(--motion-standard) var(--ease-out)
+    calc(var(--hero-phase-step) * 8) backwards;
+}
+
+.hero .hero-kicker {
+  transform: translate3d(
+    calc(var(--hero-x) * 2px),
+    calc(var(--hero-y) * 1px - var(--hero-scroll) * 8px),
+    0
+  );
+}
+
+.hero .hero-mark {
+  opacity: calc(1 - var(--hero-scroll) * 0.25);
+  transform: translate3d(
+      calc(var(--hero-x) * -8px),
+      calc(var(--hero-y) * -5px - var(--hero-scroll) * 24px),
+      0
+    )
+    scale(calc(1 - var(--hero-scroll) * 0.025));
+}
+
+.hero .hero-title {
+  opacity: calc(1 - var(--hero-scroll) * 0.22);
+  transform: translate3d(
+      calc(var(--hero-x) * 3px),
+      calc(var(--hero-y) * 2px - var(--hero-scroll) * 28px),
+      0
+    )
+    scale(calc(1 - var(--hero-scroll) * 0.012));
+  transform-origin: left center;
+}
+
+.hero .hero-title-mask,
+.hero .hero-statement-mask {
+  display: block;
+  overflow: clip;
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+}
+
+.hero .hero-title-statement-mask,
+.hero .hero-statement-line {
+  display: block;
+}
+
+.hero .hero-keyword-interface {
+  color: var(--text);
+}
+
+.hero .hero-keyword-infrastructure {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: rgb(215 255 100 / 38%);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.13em;
+}
+
+.hero .hero-title-keyword {
+  transition: color var(--motion-standard) var(--ease-out);
+}
+
+.hero .hero-intro {
+  opacity: calc(1 - var(--hero-scroll) * 0.16);
+  transform: translate3d(
+    calc(var(--hero-x) * -2px),
+    calc(var(--hero-y) * -1px - var(--hero-scroll) * 14px),
+    0
+  );
+}
+
+.hero .hero-foot {
+  opacity: calc(1 - var(--hero-scroll) * 0.1);
+  transform: translate3d(
+    calc(var(--hero-x) * 1px),
+    calc(var(--hero-scroll) * -5px),
+    0
+  );
+}
+
+.hero .hero-load-meta,
+.hero .hero-load-mark,
+.hero .hero-load-support,
+.hero .hero-load-actions,
+.hero .hero-load-secondary {
+  animation: hero-content-resolve var(--motion-standard) var(--ease-out)
+    backwards;
+}
+
+.hero .hero-load-meta {
+  animation-delay: var(--hero-phase-step);
+}
+.hero .hero-load-mark {
+  animation-delay: calc(var(--hero-phase-step) * 2);
+}
+.hero .hero-load-support {
+  animation-delay: calc(var(--hero-phase-step) * 8);
+}
+.hero .hero-load-actions {
+  animation-delay: calc(var(--hero-phase-step) * 9);
+}
+.hero .hero-load-secondary {
+  animation-delay: calc(var(--hero-phase-step) * 11);
+}
+
+.hero .hero-load-title,
+.hero .hero-load-statement {
+  animation: hero-type-resolve var(--hero-reveal-time) var(--ease-out)
+    calc(var(--hero-phase-step) * 3) backwards;
+}
+
+.hero .hero-load-statement {
+  animation-delay: calc(var(--hero-phase-step) * 5);
+}
+.hero .hero-load-infrastructure {
+  animation-delay: calc(var(--hero-phase-step) * 6);
+}
+
+.hero .hero-actions:focus-within {
+  animation: none;
+}
+
+.hero .hero-mark-index {
+  animation: hero-content-resolve var(--motion-standard) var(--ease-out)
+    calc(var(--hero-phase-step) * 8) backwards;
+}
+
+.hero .particle-logo {
+  position: absolute;
+  inset: 0;
+}
+
+.hero .particle-logo-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: clamp(1.5rem, 4vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.08em;
+}
+
+.hero .particle-logo[data-ready="true"] .particle-logo-fallback {
+  visibility: hidden;
+}
+
+@keyframes hero-path-resolve {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hero-node-resolve {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-grid-resolve {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes hero-content-resolve {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes hero-type-resolve {
+  from {
+    translate: 0 var(--hero-reveal-distance);
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero .hero-title-keyword:hover {
+    translate: none;
+  }
+}
+
+@media (max-width: 47.99rem), (pointer: coarse) {
+  .hero {
+    --hero-phase-step: calc(var(--stagger-tight) * 0.5);
+    --hero-reveal-time: var(--motion-standard);
+    --hero-reveal-distance: 24%;
+  }
+
+  .hero .hero-scene,
+  .hero .hero-schematic-depth,
+  .hero .hero-scene-axis,
+  .hero .hero-grid-lines,
+  .hero .hero-kicker,
+  .hero .hero-mark,
+  .hero .hero-title,
+  .hero .hero-intro,
+  .hero .hero-foot {
+    transform: none;
+  }
+
+  .hero .hero-schematic-paths path:nth-child(3),
+  .hero .hero-schematic-paths path:nth-child(5),
+  .hero .hero-schematic-nodes circle:nth-child(4),
+  .hero .hero-schematic-nodes circle:nth-child(7) {
+    display: none;
+  }
+
+  .hero .hero-scene-readout {
+    display: none;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .hero .hero-load-title {
+    font-size: clamp(2.6rem, 13.6vw, 5.8rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero [class*="hero-load"],
+  .hero .hero-grid-lines,
+  .hero .hero-scene-readout,
+  .hero .hero-mark-index,
+  .hero .hero-schematic path,
+  .hero .hero-schematic circle {
+    animation: none !important;
+    translate: none !important;
+  }
+
+  .hero .hero-schematic path {
+    stroke-dashoffset: 0;
+  }
+  .hero .hero-schematic circle {
+    opacity: 1;
+  }
+
+  .hero .hero-scene,
+  .hero .hero-schematic-depth,
+  .hero .hero-scene-axis,
+  .hero .hero-scene-readout,
+  .hero .hero-grid-lines,
+  .hero .hero-kicker,
+  .hero .hero-mark,
+  .hero .hero-title,
+  .hero .hero-intro,
+  .hero .hero-foot {
+    transform: none !important;
+  }
+}

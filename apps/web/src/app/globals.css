@@ -55,9 +55,7 @@
   --font-display:
     "Galaxie Copernicus", Iowan Old Style, Baskerville, "Times New Roman", serif;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-fast: 140ms;
-  --motion-standard: 220ms;
-  --motion-large: 460ms;
+  /* Shared motion values are supplied by motion/tokens.ts in the root layout. */
 }
 
 * {
@@ -93,7 +91,7 @@ html[data-project-transition]::view-transition-group(project-media) {
   z-index: 110;
   overflow: clip;
   border-radius: 0.2rem;
-  animation-duration: 640ms;
+  animation-duration: var(--motion-section);
   animation-timing-function: var(--ease-out);
 }
 
@@ -105,19 +103,21 @@ html[data-project-transition]::view-transition-new(project-media) {
 }
 
 html[data-project-transition="forward"]::view-transition-old(root) {
-  animation: project-root-forward-out 380ms var(--ease-out) both;
+  animation: project-root-forward-out var(--motion-standard) var(--ease-out)
+    both;
 }
 
 html[data-project-transition="forward"]::view-transition-new(root) {
-  animation: project-root-forward-in 520ms var(--ease-out) both;
+  animation: project-root-forward-in var(--motion-reveal) var(--ease-out) both;
 }
 
 html[data-project-transition="backward"]::view-transition-old(root) {
-  animation: project-root-backward-out 340ms var(--ease-out) both;
+  animation: project-root-backward-out var(--motion-standard) var(--ease-out)
+    both;
 }
 
 html[data-project-transition="backward"]::view-transition-new(root) {
-  animation: project-root-backward-in 500ms var(--ease-out) both;
+  animation: project-root-backward-in var(--motion-reveal) var(--ease-out) both;
 }
 
 @keyframes project-root-forward-out {
@@ -250,7 +250,8 @@ dd {
 .site-header > .brand-link,
 .site-header > .desktop-nav,
 .site-header > .header-actions {
-  animation: page-meta-enter 360ms var(--ease-out) 100ms both;
+  animation: page-meta-enter var(--motion-standard) var(--ease-out)
+    var(--stagger-tight) both;
 }
 
 .brand-link,
@@ -469,7 +470,6 @@ dd {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   stroke-width: 1;
-  animation: hero-schematic-draw 480ms var(--ease-out) 20ms forwards;
 }
 
 .hero-schematic circle {
@@ -477,7 +477,6 @@ dd {
   stroke: rgb(215 255 100 / 52%);
   stroke-width: 1;
   opacity: 0;
-  animation: hero-schematic-node 220ms ease 260ms forwards;
 }
 
 .hero-scene-axis {
@@ -709,6 +708,25 @@ dd {
   display: block;
 }
 
+.motion-reveal:focus-within,
+.reveal-item:focus-within,
+.reveal-mask:focus-within .reveal-mask-inner {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+.magnetic-link-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: inherit;
+  gap: inherit;
+}
+
+.text-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
 .hero-title-line {
   display: block;
   font-size: clamp(4.8rem, min(10.8vw, 17dvh), 10.5rem);
@@ -858,34 +876,6 @@ dd {
   width: 1rem;
 }
 
-.hero-load-meta {
-  animation: page-meta-enter 360ms var(--ease-out) 100ms both;
-}
-
-.hero-load-mark {
-  animation: page-meta-enter 380ms var(--ease-out) 120ms both;
-}
-
-.hero-load-title {
-  animation: hero-mask-enter 560ms var(--ease-out) 200ms both;
-}
-
-.hero-load-statement {
-  animation: hero-mask-enter 580ms var(--ease-out) 270ms both;
-}
-
-.hero-load-support {
-  animation: page-content-enter 480ms var(--ease-out) 360ms both;
-}
-
-.hero-load-actions {
-  animation: page-content-enter 360ms var(--ease-out) 460ms both;
-}
-
-.hero-load-secondary {
-  animation: page-meta-enter 340ms var(--ease-out) 520ms both;
-}
-
 @keyframes page-meta-enter {
   from {
     opacity: 0;
@@ -898,42 +888,6 @@ dd {
   }
 }
 
-@keyframes page-content-enter {
-  from {
-    opacity: 0;
-    translate: 0 16px;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-@keyframes hero-mask-enter {
-  from {
-    opacity: 0.2;
-    translate: 0 108%;
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-@keyframes hero-schematic-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-@keyframes hero-schematic-node {
-  to {
-    opacity: 1;
-  }
-}
-
 .continuity-rail {
   --continuity-visible: 0;
   --continuity-transition: 0;
@@ -942,7 +896,7 @@ dd {
   --continuity-track-scale: 1;
   --continuity-frame-opacity: 0;
   --continuity-frame-scale: 0.94;
-  --continuity-node-position: 0%;
+  --continuity-node-x: 0px;
   --continuity-rail-shift: 0px;
   position: fixed;
   z-index: 65;
@@ -979,7 +933,6 @@ dd {
   line-height: 1;
   text-transform: uppercase;
   transform-origin: right center;
-  will-change: transform, opacity;
 }
 
 .continuity-marker > span:first-child {
@@ -1033,13 +986,14 @@ dd {
 .continuity-track-node {
   position: absolute;
   top: 50%;
-  left: var(--continuity-node-position);
+  left: 0;
   width: 0.3rem;
   height: 0.3rem;
   border: 1px solid currentColor;
   border-radius: 50%;
   background: var(--background);
-  transform: translate(-50%, -50%);
+  transform: translate3d(var(--continuity-node-x), -50%, 0);
+  margin-left: -0.15rem;
 }
 
 .continuity-rail[data-surface="paper"] .continuity-track-node {
@@ -1540,8 +1494,8 @@ dd {
 .project-chapter .project-visual,
 .project-chapter .project-copy {
   transition:
-    opacity 180ms ease,
-    transform 220ms var(--ease-out);
+    opacity var(--motion-fast) var(--ease-out),
+    transform var(--motion-standard) var(--ease-out);
 }
 
 .project-chapter[data-project-opening="true"] .project-copy {
@@ -2539,22 +2493,6 @@ dd {
   .project-back-link:hover svg {
     transform: translateX(-0.25rem);
   }
-
-  .experience-entry,
-  .additional-project,
-  .principle,
-  .capability,
-  .education-entry {
-    transition: padding-inline var(--motion-standard) var(--ease-out);
-  }
-
-  .experience-entry:hover,
-  .additional-project:hover,
-  .principle:hover,
-  .capability:hover,
-  .education-entry:hover {
-    padding-inline: var(--space-3);
-  }
 }
 
 .button:active,
@@ -3379,6 +3317,7 @@ dd {
     opacity: 1 !important;
     transform: none !important;
     translate: none !important;
+    clip-path: none !important;
   }
 
   .hero-scene,
