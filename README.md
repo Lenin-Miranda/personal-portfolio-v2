@@ -1,6 +1,6 @@
 # Personal Portfolio v2
 
-Monorepo base para la segunda versión del portfolio de Lenin Miranda.
+Segunda versión del portfolio de Lenin Miranda: aplicación Next.js con páginas de proyectos, navegación animada, adaptación a movimiento reducido y un formulario de contacto con envío desde el servidor.
 
 ## Estructura
 
@@ -13,10 +13,22 @@ packages/
   typescript-config/    Configuración compartida de TypeScript
 ```
 
-## Comandos
+## Requisitos e instalación
+
+El manifest fija **pnpm 9.15.9** y requiere **Node.js >=20.9.0**.
 
 ```bash
-pnpm install
+git clone https://github.com/Lenin-Miranda/personal-portfolio-v2.git
+cd personal-portfolio-v2
+npm install --global pnpm@9.15.9
+pnpm install --frozen-lockfile
+```
+
+## Comandos
+
+Ejecuta desde la raíz:
+
+```bash
 pnpm dev
 pnpm check
 pnpm build
@@ -51,3 +63,13 @@ SendGrid; no expone la API key al navegador y no necesita un paquete adicional.
 
 Sin esas variables, el sitio sigue compilando y el formulario ofrece el enlace
 de email directo como fallback.
+
+## Guías del proyecto
+
+- [Pruebas de navegador](apps/web/e2e/README.md): perfiles, ejecución y diagnóstico.
+- [Fuentes](apps/web/public/fonts/README.md): tipografía local y archivo opcional.
+- [Sistema de movimiento](docs/motion-system.md): responsabilidades de animación y navegación.
+
+## Verificar cambios
+
+`pnpm check` agrupa lint y revisión de tipos. Ejecuta el build y las pruebas de navegador secuencialmente para evitar escrituras concurrentes de Next.js. Las pruebas de contacto deben interceptar las peticiones; no requieren enviar correo real.

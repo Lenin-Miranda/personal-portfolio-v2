@@ -42,3 +42,11 @@ pnpm --filter @portfolio/web exec playwright show-report
 ```
 
 Generated reports and results are ignored by Git and ESLint.
+
+## Prerequisites and troubleshooting
+
+Install workspace dependencies from the root with the pinned pnpm version before installing Chromium. If the server cannot start, check that port `3100` is free; `reuseExistingServer` is disabled so the suite never silently reuses another process.
+
+Run production builds and browser suites sequentially. A missing browser executable requires rerunning the install command above. Inspect the retained trace and screenshot for a failed assertion before increasing timeouts.
+
+Contact-form tests must intercept requests instead of sending real email. Return to the [root README](../../../README.md) for environment and workspace setup.
